@@ -6,31 +6,38 @@ import spotipy
 import spotipy.util as util
 
 DEFAULT_USERNAME = "1232863129"
+# Class Extension that allows limitless calls to functions
+
+class Spotify_Ext(spotipy.Spotify):
+    current_user_saved_tracks_alias = spotipy.Spotify.current_user_saved_tracks
+    def current_user_saved_tracks(limit=None,offset=None):
+        # These keys are now useless because we're returning all items
+        # TODO: Determine if these keys are obsolete
+        result = dict.fromkeys(['href', 'items', 'limit', 'next', 'offset', 'previous', 'total'])
+        batchSize = 50
+        idxOffset = 0
+        result['items'] = []
+        # First Call needed to determine number of tracks
+        batchResults = super().current_user_saved_tracks(limit=1,offset=0)
+        result['total'] = batchResults['total']
+        while idxOffset < result['total']:
+            batchResults = super().current_user_saved_tracks(limit=batchSize,offset=idxOffset)
+            for item in batchResults['items']:
+                result['items'].append(item)
+            idxOffset += batchSize
+        return result
 
 # Get Spotify Authorization and return user spotify token
 def initializeSpotifyToken(scope,username=DEFAULT_USERNAME):
     token = util.prompt_for_user_token(username, scope)
     
     if token:
-        sp = spotipy.Spotify(auth=token)
+        sp = Spotify_Ext(auth=token)
     else:
         raise Exception('Could not authenticate Spotify User: ', username)
 
     return sp
 
-# Get all saved tracks
-def getAllSavedTracks(sp):
-    batchSize = 50
-    idxOffset = 0
-    trackList = []
-    # First Call needed to determine number of tracks
-    batchResults = sp.current_user_saved_tracks(limit=1,offset=0)
-    while idxOffset < batchResults['total']:
-        batchResults = sp.current_user_saved_tracks(limit=batchSize,offset=idxOffset)
-        idxOffset += batchSize
-        for item in batchResults['items']:
-            trackList.append(item)
-    return trackList
 
 # Find all tracks added before a certain date (formated YYYYMMDD)
 def tracksAddedBefore(trackList,date):
@@ -107,12 +114,45 @@ def moveTracksFromLibToPlaylist(sp, trackListID, playlistID,username=DEFAULT_USE
         print('Not all tracks were added to the new playlist. Tracks will remain saved in Library')
         return False
 
+def GetTrackIDsFromPlaylistName(sp,playlistName,username=DEFAULT_USERNAME):
+    playlists = sp.user_playlists(username, limit=50, offset=0)
+    for playlist in playlists['items']:
+        if playlist['name'] == playlistName:
+            targetPlaylist = playlist
+    numTracks = targetPlaylist['tracks']['total']
+    batchSize = 100
+    trackListID = []
+    for idxOffset in range(0,numTracks,batchSize):
+        batchTrackList = sp.user_playlist_tracks(username,targetPlaylist['id'],fields=None,limit=batchSize,offset=idxOffset)
+        for track in batchTrackList['items']:
+            trackListID.append(track['track']['id'])
+    return trackListID
+
+def SavePlaylistToLibrary(sp,playlistName):
+    trackIDsFromPlaylist = GetTrackIDsFromPlaylistName(sp,playlistName,username=DEFAULT_USERNAME)
+    for track in trackIDsFromPlaylist:
+        sp.current_user_saved_tracks_add([track])
+
+def RemovePlaylistFromLibrary(sp,playlistName):
+    trackIDsFromPlaylist = GetTrackIDsFromPlaylistName(sp,playlistName,username=DEFAULT_USERNAME)
+    for track in trackIDsFromPlaylist:
+        sp.current_user_saved_tracks_delete([track])
+
 sp = initializeSpotifyToken('user-library-read user-library-modify playlist-modify-private playlist-read-private')
 
-trackList = getAllSavedTracks(sp)
+#playlistName = 'Archive--2018'
+#SavePlaylistToLibrary(sp,playlistName)
+#RemovePlaylistFromLibrary(sp,playlistName)
+trackList = sp.current_user_saved_tracks_alias()
+trackList2 = sp.current_user_saved_tracks()
+printTracks(trackList['items'])
+printTracks(trackList2['items'])
+
+## ARCHIVING FLOW
+#trackList = getAllSavedTracks(sp)
 
 # Filter down to all tracks before a certain date
-trackListFiltered = tracksAddedBetween(trackList,20190101,20199999)
+#trackListFiltered = tracksAddedBetween(trackList,20190101,20199999)
 
 # TODO: Need to delete playlist if already exists
 
@@ -120,16 +160,7 @@ trackListFiltered = tracksAddedBetween(trackList,20190101,20199999)
 #erasePlaylistsByNames(sp, "Archive--2018")
 #playlist = sp.user_playlist_create(DEFAULT_USERNAME, "Archive--2018", public=False)
 
-printTracks(trackListFiltered)
+#printTracks(trackListFiltered)
 # Extract IDs from trackList
 #idTrackList = [track['track']['uri'] for track in trackListFiltered]
 #moveTracksFromLibToPlaylist(sp, idTrackList, playlist['id'])
-
-# Remove tracks from library
-
-
-
-
-# Create new playlist for archived tracks
-
-# Unsave archived tracks from library
