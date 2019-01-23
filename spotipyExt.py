@@ -1,32 +1,31 @@
-
-# This function removes old saved songs from the saved songs library and creates an archive playlist
-
 import sys
 import spotipy
 import spotipy.util as util
 
 DEFAULT_USERNAME = "1232863129"
-# Class Extension that allows limitless calls to functions
 
-class Spotify_Ext(spotipy.Spotify):
+# Class Extension that allows limitless calls to functions
+class SpotifyExt(spotipy.Spotify):
     current_user_saved_tracks_original = spotipy.Spotify.current_user_saved_tracks
-    def current_user_saved_tracks(limit=None,offset=None):
+    def current_user_saved_tracks(limit=float('inf'),offset=0):
         # These keys are now useless because we're returning all items
-        # TODO: Determine if these keys are obsolete
+        # TODO: Determine if all keys besides items are obsolete
         result = dict.fromkeys(['href', 'items', 'limit', 'next', 'offset', 'previous', 'total'])
+        # Maximum batch size allowed Spotipy API
         batchSize = 50
-        idxOffset = 0
+        idxOffset = offset
         result['items'] = []
         # First Call needed to determine number of tracks
         batchResults = super().current_user_saved_tracks(limit=1,offset=0)
         result['total'] = batchResults['total']
+        # TODO: implement limiting from method keyword argument into the the while call
         while idxOffset < result['total']:
             batchResults = super().current_user_saved_tracks(limit=batchSize,offset=idxOffset)
             for item in batchResults['items']:
                 result['items'].append(item)
             idxOffset += batchSize
         return result
-        
+    
     # Find all tracks added before a certain date (formated YYYYMMDD)
     def tracksAddedBefore(trackList,date):
         trackListBeforeDate = []
@@ -133,42 +132,9 @@ def initializeSpotifyToken(scope,username=DEFAULT_USERNAME):
     token = util.prompt_for_user_token(username, scope)
     
     if token:
-        sp = Spotify_Ext(auth=token)
+        sp = SpotifyExt(auth=token)
     else:
         raise Exception('Could not authenticate Spotify User: ', username)
 
     return sp
 
-
-
-
-
-
-sp = initializeSpotifyToken('user-library-read user-library-modify playlist-modify-private playlist-read-private')
-
-playlistName = 'Archive--2018'
-#SavePlaylistToLibrary(sp,playlistName)
-#RemovePlaylistFromLibrary(sp,playlistName)
-
-# Derived Function Test
-trackList = sp.current_user_saved_tracks_original()
-trackList2 = sp.current_user_saved_tracks()
-Spotify_Ext.printTracks(trackList['items'])
-Spotify_Ext.printTracks(trackList2['items'])
-
-## ARCHIVING FLOW
-#trackList = getAllSavedTracks(sp)
-
-# Filter down to all tracks before a certain date
-#trackListFiltered = tracksAddedBetween(trackList,20190101,20199999)
-
-# TODO: Need to delete playlist if already exists
-
-# Delete and recreate playlist
-#erasePlaylistsByNames(sp, "Archive--2018")
-#playlist = sp.user_playlist_create(DEFAULT_USERNAME, "Archive--2018", public=False)
-
-#printTracks(trackListFiltered)
-# Extract IDs from trackList
-#idTrackList = [track['track']['uri'] for track in trackListFiltered]
-#moveTracksFromLibToPlaylist(sp, idTrackList, playlist['id'])
