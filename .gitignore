@@ -1,4 +1,6 @@
 # Ignore All dot files
 .*
+# Ignore cache
+__pycache__
 # Don't ignore this dot file
 !/.gitignore
