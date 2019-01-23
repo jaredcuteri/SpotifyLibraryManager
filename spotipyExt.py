@@ -6,24 +6,32 @@ DEFAULT_USERNAME = "1232863129"
 
 # Class Extension that allows limitless calls to functions
 class SpotifyExt(spotipy.Spotify):
+    
     current_user_saved_tracks_original = spotipy.Spotify.current_user_saved_tracks
-    def current_user_saved_tracks(limit=float('inf'),offset=0):
+    def current_user_saved_tracks(self,limit=float('inf'),offset=0):
+        
         # These keys are now useless because we're returning all items
         # TODO: Determine if all keys besides items are obsolete
         result = dict.fromkeys(['href', 'items', 'limit', 'next', 'offset', 'previous', 'total'])
+        
         # Maximum batch size allowed Spotipy API
         batchSize = 50
-        idxOffset = offset
         result['items'] = []
+        
         # First Call needed to determine number of tracks
         batchResults = super().current_user_saved_tracks(limit=1,offset=0)
+        # TODO: result total should be changed to the number of tracks returned
         result['total'] = batchResults['total']
-        # TODO: implement limiting from method keyword argument into the the while call
-        while idxOffset < result['total']:
-            batchResults = super().current_user_saved_tracks(limit=batchSize,offset=idxOffset)
-            for item in batchResults['items']:
-                result['items'].append(item)
-            idxOffset += batchSize
+        
+        # Calculate number of tracks to be processed
+        numTracksToProcess = min(result['total'],limit)
+    
+        # Return results in batches and append to results
+        for idxBatch in range(offset,numTracksToProcess+offset,batchSize):
+            batchResults = super().current_user_saved_tracks(limit=batchSize,offset=idxBatch)
+            for idxTrack, item in enumerate(batchResults['items'],idxBatch):
+                if idxTrack < numTracksToProcess+offset:
+                    result['items'].append(item)            
         return result
     
     # Find all tracks added before a certain date (formated YYYYMMDD)
