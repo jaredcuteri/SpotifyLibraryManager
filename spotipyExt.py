@@ -7,12 +7,12 @@ DEFAULT_USERNAME = "1232863129"
 # Class Extension that allows limitless calls to functions
 class SpotifyExt(spotipy.Spotify):
     
-    current_user_saved_tracks_original = spotipy.Spotify.current_user_saved_tracks
     def current_user_saved_tracks(self,limit=float('inf'),offset=0):
         
         # These keys are now useless because we're returning all items
         # TODO: Determine if all keys besides items are obsolete
-        result = dict.fromkeys(['href', 'items', 'limit', 'next', 'offset', 'previous', 'total'])
+        result = dict.fromkeys(['href', 'items', 'limit', 'next',\
+                                'offset', 'previous', 'total'])
         
         # Maximum batch size allowed Spotipy API
         batchSize = 50
@@ -28,7 +28,8 @@ class SpotifyExt(spotipy.Spotify):
     
         # Return results in batches and append to results
         for idxBatch in range(offset,numTracksToProcess+offset,batchSize):
-            batchResults = super().current_user_saved_tracks(limit=batchSize,offset=idxBatch)
+            batchResults = super().current_user_saved_tracks(limit=batchSize,\
+                                                             offset=idxBatch)
             for idxTrack, item in enumerate(batchResults['items'],idxBatch):
                 if idxTrack < numTracksToProcess+offset:
                     result['items'].append(item)            
@@ -36,6 +37,19 @@ class SpotifyExt(spotipy.Spotify):
     
     # Find all tracks added before a certain date (formated YYYYMMDD)
     def tracksAddedBefore(trackList,date):
+        # Input Type handling
+        if type(date) == int:
+            date = str(date)
+        elif type(date) == int:
+            pass
+        else:
+            raise TypeError('Date parameter to tracksAddedBefore must \
+                             be str or int type, %s provided', type(date))
+                             
+        # Round down if date truncated
+        date.ljust(8,'0')
+        date = int(date)
+        
         trackListBeforeDate = []
         for track in trackList:
             data_added_str = track['added_at'][:10]
@@ -46,6 +60,18 @@ class SpotifyExt(spotipy.Spotify):
 
     # Find all tracks added after a certain date (formated YYYYMMDD)
     def tracksAddedAfter(trackList,date):
+        # Input Type handling
+        if type(date) == int:
+            date = str(date)
+        elif type(date) == int:
+            pass
+        else:
+            raise TypeError('Date parameter to tracksAddedAfter must \
+                             be str or int type, %s provided', type(date))    
+        # Round up if date truncated
+        date.ljust(8,'9')
+        date = int(date)
+        
         trackListAfterDate = []
         for track in trackList:
             data_added_str = track['added_at'][:10]
@@ -62,8 +88,9 @@ class SpotifyExt(spotipy.Spotify):
 
     # Output the track list to the terminal
     def printTracks(trackList):
-        for track in trackList:
-            print(track['track']['name'] + ' - ' + track['track']['artists'][0]['name'])
+        for track in trackLists:
+            print(track['track']['name'] + ' - ' 
+                + track['track']['artists'][0]['name'])
 
     # Save long track list to playlist
     def saveAllTracksToPlaylist(sp, trackListID, playlistID, username=DEFAULT_USERNAME):
@@ -71,7 +98,9 @@ class SpotifyExt(spotipy.Spotify):
         numTracksAdded = 0
         batchSize = 100
         # TODO: Set order of add by date added
-        batchedTrackListID = [trackListID[x:x+batchSize] for x in range(0,len(trackListID)+1,batchSize)]
+        batchedTrackListID = [trackListID[x:x+batchSize] for x in \
+                              range(0,len(trackListID)+1,batchSize)]
+                              
         for trackID in batchedTrackListID:
             result = sp.user_playlist_add_tracks(username,playlistID,trackID)
             numTracksAdded += len(trackID)
@@ -94,8 +123,8 @@ class SpotifyExt(spotipy.Spotify):
                     pass
         return numPlaylistsDeleted
 
-    def moveTracksFromLibToPlaylist(sp, trackListID, playlistID,username=DEFAULT_USERNAME):
-        numTracksAdded = saveAllTracksToPlaylist(sp, trackListID, playlistID, username=DEFAULT_USERNAME)
+    def moveTracksFromLibToPlaylist(sp, trackListID, playlistID):
+        numTracksAdded = saveAllTracksToPlaylist(sp, trackListID, playlistID)
         # Verify all tracks were added before unsaving
         numTracksDeleted = 0
         if numTracksAdded == len(trackListID):
@@ -103,10 +132,12 @@ class SpotifyExt(spotipy.Spotify):
             for track in trackListID:
                 result = sp.current_user_saved_tracks_delete([track])
                 numTracksDeleted += 1
-            print('moveTracksFromLibToPlaylist: %d tracks added / %d tracks deleted'%(numTracksAdded,numTracksDeleted))
+            print('moveTracksFromLibToPlaylist: %d tracks added / %d tracks deleted'\
+                  %(numTracksAdded,numTracksDeleted))
             return True
         else:
-            print('Not all tracks were added to the new playlist. Tracks will remain saved in Library')
+            print('Not all tracks were added to the new playlist. \
+                   Tracks will remain saved in Library')
             return False
 
     def GetTrackIDsFromPlaylistName(sp,playlistName,username=DEFAULT_USERNAME):
@@ -138,7 +169,6 @@ class SpotifyExt(spotipy.Spotify):
 # Get Spotify Authorization and return user spotify token
 def initializeSpotifyToken(scope,username=DEFAULT_USERNAME):
     token = util.prompt_for_user_token(username, scope)
-    
     if token:
         sp = SpotifyExt(auth=token)
     else:
