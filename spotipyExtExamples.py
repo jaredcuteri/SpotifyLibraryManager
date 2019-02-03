@@ -11,18 +11,14 @@ playlistName = 'Archive--2018'
 #RemovePlaylistFromLibrary(sp,playlistName)
 
 # Derived Function Test
-trackList = sp.current_user_saved_tracks_original()
-trackList2 = sp.current_user_saved_tracks()
+trackList = sp.current_user_saved_tracks()
 SpotifyExt.printTracks(trackList['items'])
-SpotifyExt.printTracks(trackList2['items'])
 
 ## ARCHIVING FLOW
 #trackList = getAllSavedTracks(sp)
 
 # Filter down to all tracks before a certain date
 #trackListFiltered = tracksAddedBetween(trackList,20190101,20199999)
-
-# TODO: Need to delete playlist if already exists
 
 # Delete and recreate playlist
 #erasePlaylistsByNames(sp, "Archive--2018")
