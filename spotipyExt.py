@@ -7,6 +7,7 @@ DEFAULT_USERNAME = "1232863129"
 # Class Extension that allows limitless calls to functions
 class SpotifyExt(spotipy.Spotify):
     
+    # Limitless get current user saved tracks
     def current_user_saved_tracks(self,limit=float('inf'),offset=0):
         
         # These keys are now useless because we're returning all items
@@ -34,6 +35,25 @@ class SpotifyExt(spotipy.Spotify):
                 if idxTrack < numTracksToProcess+offset:
                     result['items'].append(item)            
         return result
+    
+    # Limitless save all tracks to playlist
+    def user_playlist_add_tracks(self,username, playlist_id, tracks_id, position=None):
+        # TODO: Add parsing for  dictionary of tracks
+        # tracks must be a list of track id's
+        numTracksAdded = 0
+        # Max allowed by spotify api
+        batchSize = 100
+        
+        # TODO: Set order of add by date added
+        batched_tracks_id = [tracks_id[x:x+batchSize] for x in \
+                              range(0,len(tracks_id)+1,batchSize)]
+                          
+        for batch_tracks_id in batched_tracks_id:
+            result = super().user_playlist_add_tracks(username,playlist_id,batch_tracks_id)
+            numTracksAdded += len(batch_tracks_id)
+        return numTracksAdded
+
+    # TODO: override user_playlists to be limitless
     
     # Find all tracks added before a certain date (formated YYYYMMDD)
     def tracksAddedBefore(trackList,date):
@@ -92,19 +112,6 @@ class SpotifyExt(spotipy.Spotify):
             print(track['track']['name'] + ' - ' 
                 + track['track']['artists'][0]['name'])
 
-    # Save long track list to playlist
-    def saveAllTracksToPlaylist(sp, trackListID, playlistID, username=DEFAULT_USERNAME):
-        # TODO: Batch together 100 songs per call
-        numTracksAdded = 0
-        batchSize = 100
-        # TODO: Set order of add by date added
-        batchedTrackListID = [trackListID[x:x+batchSize] for x in \
-                              range(0,len(trackListID)+1,batchSize)]
-                              
-        for trackID in batchedTrackListID:
-            result = sp.user_playlist_add_tracks(username,playlistID,trackID)
-            numTracksAdded += len(trackID)
-        return numTracksAdded
 
 
     # TODO: Alleviate 50 playlist limit
