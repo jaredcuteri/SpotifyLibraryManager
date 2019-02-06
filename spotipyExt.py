@@ -9,16 +9,16 @@ class SpotifyExt(spotipy.Spotify):
     '''
     SpotifyExt is an extension of the spotipy.Spotify class that allows "limitless" 
     getter and setter functions. For example: current_user_saved_tracks is limited
-    to 50 tracks at a time with spotipy, spotipyExt removes this limit.
+    to pulling 50 tracks at a time with spotipy, spotipyExt removes this limit.
     
     '''
     __doc__ += spotipy.Spotify.__doc__ 
     
-    def __init__(self,*args,**kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args,**kwargs)
         
-    # Limitless get current user saved tracks
-    def current_user_saved_tracks(self,limit=float('inf'),offset=0):
+    # TODO: Create decorator (for saved tracks and user playlists because wrapping is identical)
+    def current_user_saved_tracks(self, limit=float('inf'), offset=0):
         ''' Gets an unlimited list of the tracks saved in the current
             authorized user's "Your Music" library
 
@@ -29,33 +29,32 @@ class SpotifyExt(spotipy.Spotify):
         '''
 
         # These keys are now useless because we're returning all items
-        result = dict.fromkeys(['href', 'items', 'limit', 'next',\
+        savedTracks = dict.fromkeys(['href', 'items', 'limit', 'next',\
                                 'offset', 'previous', 'total'])
         
         # Maximum batch size allowed Spotipy API
         batchSize = 50
-        result['items'] = []
+        savedTracks['items'] = []
         
         # First Call needed to determine number of tracks
         # TODO: refactor so there isn't a dangling call
         batchResults = super().current_user_saved_tracks(limit=1,offset=0)
         
-        result['total'] = batchResults['total']
+        savedTracks['total'] = batchResults['total']
         
         # Calculate number of tracks to be processed
-        numTracksToProcess = min(result['total'],limit)
+        numTracksToProcess = min(savedTracks['total'],limit)
     
-        # Return results in batches and append to results
+        # Return savedTrackss in batches and append to savedTrackss
         for idxBatch in range(offset,numTracksToProcess+offset,batchSize):
             batchResults = super().current_user_saved_tracks(limit=batchSize,\
                                                              offset=idxBatch)
             for idxTrack, item in enumerate(batchResults['items'],idxBatch):
                 if idxTrack < numTracksToProcess+offset:
-                    result['items'].append(item)            
-        return result
+                    savedTracks['items'].append(item)            
+        return savedTracks
     
-    # Limitless save all tracks to playlist
-    def user_playlist_add_tracks(self,user, playlist_id, tracks, position=None):
+    def user_playlist_add_tracks(self, user, playlist_id, tracks, position=None):
         ''' Adds an unlimited number of tracks to a playlist
 
             Parameters:
@@ -80,10 +79,45 @@ class SpotifyExt(spotipy.Spotify):
             result = super().user_playlist_add_tracks(user,playlist_id,track_batch)
             numTracksAdded += len(track_batch)
         return numTracksAdded
-
-    # TODO: override user_playlists to be limitless
     
-    def tracksAddedBefore(self, trackList,date):
+    def user_playlists(self, user, limit=float('inf'), offset=0):
+        ''' Gets an unlimited number of user playlists
+            
+            Parameters:
+                - user - username to pull playlists from
+                - limit - limit number of playlists returned
+                - offset - playlist index offest
+            Returns:
+                - result - playlists
+        '''
+        # These keys are now useless because we're returning all items
+        playlists = dict.fromkeys(['href', 'items', 'limit', 'next',\
+                                'offset', 'previous', 'total'])
+        
+        # Maximum batch size allowed Spotipy API
+        batchSize = 50
+        playlists['items'] = []
+        
+        # First Call needed to determine number of playlists
+        # TODO: refactor so there isn't a dangling call
+        batchResults = super().user_playlists( user, limit=1,offset=0)
+        
+        playlists['total'] = batchResults['total']
+        
+        # Calculate number of playlists to be processed
+        numPlaylistsToProcess = min(playlists['total'],limit)
+    
+        # Return results in batches and append to results
+        for idxBatch in range(offset,numPlaylistsToProcess+offset,batchSize):
+            batchResults = super().user_playlists( user, limit=batchSize,\
+                                                             offset=idxBatch)
+            for idxPlaylist, item in enumerate(batchResults['items'],idxBatch):
+                if idxPlaylist < numPlaylistsToProcess+offset:
+                    playlists['items'].append(item)            
+        return playlists
+        
+    
+    def tracksAddedBefore(self, trackList, date):
         ''' Return list of tracks added before date (YYYYMMDD)
 
             Parameters:
@@ -113,7 +147,7 @@ class SpotifyExt(spotipy.Spotify):
                 trackListBeforeDate.append(track)
         return trackListBeforeDate
 
-    def tracksAddedAfter(self, trackList,date):
+    def tracksAddedAfter(self, trackList, date):
         ''' Return list of tracks added after date (YYYYMMDD)
 
             Parameters:
@@ -142,7 +176,7 @@ class SpotifyExt(spotipy.Spotify):
                 trackListAfterDate.append(track)
         return trackListAfterDate
 
-    def tracksAddedBetween(tracklist,afterDate,beforeDate):
+    def tracksAddedBetween(self, tracklist, afterDate, beforeDate):
         ''' Return list of tracks added between dates
 
             Parameters:
@@ -219,7 +253,7 @@ class SpotifyExt(spotipy.Spotify):
             
         return flagAllTracksMoved
 
-    def getTrackIDsFromPlaylistName(self,playlistName,username=DEFAULT_USERNAME):
+    def getTrackIDsFromPlaylistName(self, playlistName, username=DEFAULT_USERNAME):
         ''' Get all tracks from playlist by name
         
             Paramters:
@@ -242,7 +276,7 @@ class SpotifyExt(spotipy.Spotify):
                 trackList.append(track['track'])
         return trackList
 
-    def savePlaylistToLibrary(self,playlistName):
+    def savePlaylistToLibrary(self, playlistName):
         ''' Save all tracks from playlist to library
         
             Parameters:
@@ -252,7 +286,7 @@ class SpotifyExt(spotipy.Spotify):
         for track in trackIDsFromPlaylist:
             self.current_user_saved_tracks_add([track])
 
-    def removePlaylistFromLibrary(self,playlistName):
+    def removePlaylistFromLibrary(self, playlistName):
         ''' Remove all tracks from playlist in library
         
             Parameters:

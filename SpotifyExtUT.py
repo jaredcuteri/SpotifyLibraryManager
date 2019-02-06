@@ -1,12 +1,12 @@
 import unittest
 from spotipyExt import * 
 
-class TestCurrentUserSavedTracksMethod(unittest.TestCase):
+class TestSpotipyExt(unittest.TestCase):
     
     test_tag = '__test__'
     
     def setUp(self):
-        # TODO: Determine why changing scope causes the first call thru to fai
+        # TODO: Determine why changing scope causes the first call thru to fail
         # Initialize spotify and spotifyExt objects
         scope = 'user-library-read playlist-modify-private playlist-read-private'
         token = util.prompt_for_user_token(username=DEFAULT_USERNAME, scope=scope)
@@ -61,6 +61,8 @@ class TestCurrentUserSavedTracksMethod(unittest.TestCase):
         tracksOriginal = [ track['track']  for track in playlistOriginal['tracks']['items']]
         tracks = [ track['track']  for track in playlist['tracks']['items']]
         self.assertEqual(tracksOriginal,tracks)
+    
+    # TODO: Add user playlists test ( add bunch of playlists and check that they are found) 
         
     def tearDown(self):
         # Find all playlists starting __test__
@@ -71,7 +73,7 @@ class TestCurrentUserSavedTracksMethod(unittest.TestCase):
         for testPlaylist in testPlaylistsID:
             self.spotify.user_playlist_unfollow(DEFAULT_USERNAME,testPlaylist)
         
-# Supporting Functions
+        
 def getAllSavedTracks(sp):
         batchSize = 50
         idxOffset = 0
@@ -89,9 +91,7 @@ def getAllSavedTracks(sp):
                 trackList['items'].append(item)
         return trackList
 
-# Save long track list to playlist
 def saveAllTracksToPlaylist(sp, playlistID, trackListID, username=DEFAULT_USERNAME):
-        # TODO: Batch together 100 songs per call
         numTracksAdded = 0
         batchSize = 100
         # TODO: Set order of add by date added
