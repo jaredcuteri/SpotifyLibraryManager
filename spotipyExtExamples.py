@@ -11,7 +11,8 @@ playlistName = 'Archive--2018'
 #RemovePlaylistFromLibrary(sp,playlistName)
 
 # Derived Function Test
-trackList = sp.current_user_saved_tracks()
+playlists = spotipyExt.user_playlists('1232863129')
+
 SpotifyExt.printTracks(trackList['items'])
 
 ## ARCHIVING FLOW
