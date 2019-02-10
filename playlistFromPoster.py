@@ -9,22 +9,27 @@ import pytesseract
 import inspect
 import re
 import spotipyExt
+import math
 
-# TODO: add in logging each step of the way
+USERNAME = '1232863129'
+IMAGE = 'crssd.jpg'
+PLAYLIST_NAME = 'CRSSD Spring 2018'
 pytesseract.tesseract_cmd = r'/user/local/Cellar/tesseract/4.0.0/bin/tesseract'
 
 # Open poster
-poster = Image.open('crssd.jpg')
+poster = Image.open(IMAGE)
 
 # modify poster to make it readable (monochromatic)
 poster_gray = poster.convert('L')
+# TODO: Ensure that the poster ends up black on white
 poster_bw = poster_gray.point(lambda x: 0 if x<128 else 255,'1')
-
+poster.show()
+poster_bw.show()
 #save off text from poster
 poster_text = pytesseract.image_to_string(poster_bw)
-
+print(poster_text)
 # replace all weird characters with . 
-weird_characters = ['\n','-']
+weird_characters = ['\n','-','»','>','°','*','~']
 for character in weird_characters:
     poster_text = poster_text.replace(character,'.')
 # replace weird cats 'n dogs comma
@@ -102,16 +107,31 @@ for possibleArtist in setlist:
             foundArtist = PartialArtistMatch(possibleArtist,slicer=lSlice)
             if foundArtist:
                 artistsDict[possibleArtist] = foundArtist
+            else:
+                artistsDict[possibleArtist] = None
               
-artistMatching = { (k,v['name']) for k,v in artistsDict.items() if v is not None}  
-unmatchedArtists = {k for k,v in artistsDict.items() if v is None}
+matchedArtists = [v for k,v in artistsDict.items() if v is not None]  
+unmatchedArtists = [k for k,v in artistsDict.items() if v is None]
 
-print('**Found %d/%d of possible artists.'%(len(artistMatching),len(setlist)))
+print('**Found %d/%d of possible artists.'%(len(matchedArtists),len(setlist)))
 print('**The following possible artists could not be found: ',unmatchedArtists)
 
-    
-# If popular artist isn't found redo search after popping off some of the characters (Wajattaiive) -> Wajattaiiv -> Wajatta
-# Once all artists have been found, return artists without a match, sort artists based upon popularity
-# With artists sorted by popularity set up a tiered list (i.g. top 5 songs from each top 20% of artists, 3 from next 20%, and so on)
-# Add songs to playlist
+# TODO: Add prompt to resolve unmatchedArtists
 
+# With artists sorted by popularity set up a tiered list (i.g. top 5 songs from each top 20% of artists, 3 from next 20%, and so on)
+
+matchedArtists.sort(key=lambda x: x['popularity'], reverse=True)
+numArt=len(matchedArtists)
+playlistTracks = []
+for artIdx, art in enumerate(matchedArtists):
+    artTopTracks = spotify.artist_top_tracks(art['id'])
+    #TODO: update tracks scheduling
+    # Current schedule top 25% - 5 tracks 50% - 4 tracks 75% - 3 tracks 100% - 2 tracks
+    songCount = math.ceil((1-(artIdx/numArt))/0.25)+1
+    playlistTracks+= artTopTracks['tracks'][:songCount]
+    
+# Add songs to playlist
+playlist = spotify.user_playlist_create(USERNAME, PLAYLIST_NAME, public=True)
+#TODO: Make playlist collab user_playlist_change_details(user, playlist_id, name=None, public=None, collaborative=None, description=None) 
+playlistTracksID = [track['id'] for track in playlistTracks]
+spotify.user_playlist_add_tracks(USERNAME, playlist['id'], playlistTracksID, position=None)
