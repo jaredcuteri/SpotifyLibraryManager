@@ -296,8 +296,93 @@ class SpotifyExt(spotipy.Spotify):
         trackIDsFromPlaylist = GetTrackIDsFromPlaylistName(self,playlistName,username=DEFAULT_USERNAME)
         for track in trackIDsFromPlaylist:
             self.current_user_saved_tracks_delete([track])
+    
+    @staticmethod
+    def fullArtistMatch(artistList, possibleArtist):
+        ''' fullArtistMatch takes a list of possible artists and compares it 
+                to the possible artists name
+    
+            Parameters
+                -possibleArtistMatches: list of artist objects
+                -possibleArtist: string of artist name
+    
+            Returns
+               - matched artist object or none
+    
+        '''
+        # sort artists by popularity
+        popThresh = 10 # Popularity Threshold
+        artistList = [ x for x in artistList if x['popularity']>=popThresh]
+        artistList.sort(key=lambda x: x['popularity'], reverse=True)
+        # Check for perfect matches
+        for artist in artistList:
+            if artist['name'] == possibleArtist:
+                return artist
+        else:
+            return None
 
-
+    # TODO: Make into static method
+    def partialArtistMatch(self,FullName,PartialName=None,slicer=lambda x: x[:-1]):
+        ''' partialArtistMatch recursively attempts to find an artist by
+                 slicing part of the string
+            
+            Parameters
+                - FullName: Original string
+                - PartialName: current string to be evaluated
+                - slicer: slicing function for "trimming" down string
+        
+            Returns:
+              - final_result: artist found or none
+        
+        '''
+        # Initializing PartialName for recursion
+        if PartialName==None:
+            PartialName = FullName
+        
+        # Base popularity threshold off how much of name has been removed
+        # TODO: tune theshold scheduling
+        subStringRatio = len(PartialName)/len(FullName)
+        popThresh = 20*(-0.3+(1-subStringRatio))
+        
+        # TODO: not ideal to create spotipy objects for each call
+        found_artist = self.search(PartialName,limit=1,type='artist')
+    
+        # Exit if we've trimmed more than 50% of the name
+        if subStringRatio<0.5:
+            return None
+        # Check for match
+        # TODO: is it necessary to check the name again? Does search only return perfect matches?
+        elif found_artist['artists']['items'] \
+         and found_artist['artists']['items'][0]['name'] == PartialName \
+         and found_artist['artists']['items'][0]['popularity'] >= popThresh:
+            return found_artist['artists']['items'][0]   
+        # Recurse with partial name
+        else:
+            final_result = self.partialArtistMatch(FullName,slicer(PartialName),slicer=slicer)
+            return final_result
+    
+    # TODO: Make into static method        
+    def getTracksByArtists(self, artists,numSongs=1):
+        ''' getTracksByArtists returns a list of tracks containing top tracks from artists
+    
+            Parameters:
+                artists - list of spotipy artists 
+                numSongs - function that determines number of tracks to add from each artist
+    
+            Returns:
+                playlistTracks - list of tracks
+        '''
+        # Sort Artists By Popularity
+        artists.sort(key=lambda x: x['popularity'], reverse=True)
+        # Determine Number of Artists
+        numArt=len(artists)
+        playlistTracks = []
+        for idxArt, art in enumerate(artists):
+            # TODO: not ideal to create spotipy objects for each call
+            artTopTracks = self.artist_top_tracks(art['id'])
+            songCount = numSongs(idxArt,numArt)
+            playlistTracks+= artTopTracks['tracks'][:songCount]
+        return playlistTracks
 
 # Get Spotify Authorization and return user spotify token
 def initializeSpotifyToken(scope,username=DEFAULT_USERNAME):
