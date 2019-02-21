@@ -12,8 +12,9 @@ import spotipyExt
 import math
 
 USERNAME = '1232863129'
-IMAGE = 'posters/crssd.jpg'
-PLAYLIST_NAME = 'CRSSD Spring 2018'
+IMAGE = 'posters/abgt_gorge.png'
+PLAYLIST_NAME = 'ABGT Gorge'
+# TODO: Add playlist length limit (adjust track scheduling to match total number of tracks)
 pytesseract.tesseract_cmd = r'/user/local/Cellar/tesseract/4.0.0/bin/tesseract'
 
 # Open poster
@@ -28,14 +29,53 @@ poster_bw = poster_gray.point(lambda x: 0 if x<128 else 255,'1')
 poster_text = pytesseract.image_to_string(poster_bw)
 
 # replace all weird characters with . 
-weird_characters = ['\n','-','»','>','°','*','~']
+weird_characters = ['\n','-','»','>','°','*','~','.']
 for character in weird_characters:
-    poster_text = poster_text.replace(character,'.')
+    poster_text = poster_text.replace(character,'\n')
 
+def promptUserForCorrections(initialText):
+    ''' promptUserForCorrections is a GUI that allows the user to modify the text string
+    
+         Parameters:
+            - initialText - initial string of text
+    
+         Return:
+            - finalText - updated string of text submitted by the user
+    
+    '''
+    import tkinter as tk
+    from tkinter.scrolledtext import ScrolledText
+    # TODO: Better formatting of window, more descriptive labels, add some colors
+    finalText = None
+    master = tk.Tk()
+    master.geometry("300x450")
+    L1 = tk.Label(master, text='List of Artists')
+    L2 = tk.Label(master, text='Modify as necessary')
+    L1.pack(fill=tk.X)
+    L2.pack(fill=tk.X)
+    e = ScrolledText(master)
+    e.insert(tk.INSERT,initialText)
+    e.pack(fill=tk.X)
+    e.focus_set()
+    
+    def callback():
+        nonlocal finalText
+        finalText = e.get(1.0,tk.END)
+        master.destroy()
+        
+    b = tk.Button(master, text = "Submit", width=10, command=callback)
+
+    b.pack()
+
+    tk.mainloop()
+    
+    return finalText
+
+poster_text = promptUserForCorrections(poster_text)
 #parse string into list of possible artists
 # TODO: Make this more robust    
-setlist = re.split('\W*\.+\W*',poster_text)
-
+setlist = re.split('\W*\n+\W*',poster_text)
+setlist = list(filter(None, setlist))
 
 # Verify list of artists via spotipy (using popularity)
 scope = 'user-library-read playlist-modify-private playlist-read-private'
@@ -71,8 +111,8 @@ for possibleArtist in setlist:
 matchedArtists = [v for k,v in artistsDict.items() if v is not None]  
 unmatchedArtists = [k for k,v in artistsDict.items() if v is None]
 
-print('**Found %d/%d of possible artists.'%(len(matchedArtists),len(setlist)))
-print('**The following possible artists could not be found: ',unmatchedArtists)
+print('+ Found %d/%d of possible artists.'%(len(matchedArtists),len(setlist)))
+print('-- The following possible artists could not be found: ',unmatchedArtists)
 
 # TODO: Add prompt to resolve unmatchedArtists
 
@@ -84,3 +124,5 @@ playlistTracks = spotify.getTracksByArtists(matchedArtists,numSongs=trackCountBa
 playlist = spotify.user_playlist_create(USERNAME, PLAYLIST_NAME, public=True)
 playlistTracksID = [track['id'] for track in playlistTracks]
 spotify.user_playlist_add_tracks(USERNAME, playlist['id'], playlistTracksID)
+print('+++ Playlist Generated: ',PLAYLIST_NAME)
+print('++++ %d tracks added'%len(playlistTracksID))

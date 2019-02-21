@@ -3,7 +3,6 @@ import spotipy
 import spotipy.util as util
 
 DEFAULT_USERNAME = "1232863129"
-# TODO: Update docstring inheritance to better utilized super()
 
 class SpotifyExt(spotipy.Spotify):
     '''
@@ -298,6 +297,23 @@ class SpotifyExt(spotipy.Spotify):
             self.current_user_saved_tracks_delete([track])
     
     @staticmethod
+    def compareNames(name1, name2):
+        import unicodedata
+        def removeAccents(string):
+             return ''.join((c for c in unicodedata.normalize('NFD', string) \
+                                        if unicodedata.category(c) != 'Mn'))
+        def removeCasing(string):
+            return string.lower()
+            
+        def fixName(string):
+            return removeCasing(removeAccents(string))
+            
+        if fixName(name1) == fixName(name2):
+            return True
+        else:
+            return False
+    
+    @staticmethod
     def fullArtistMatch(artistList, possibleArtist):
         ''' fullArtistMatch takes a list of possible artists and compares it 
                 to the possible artists name
@@ -315,8 +331,9 @@ class SpotifyExt(spotipy.Spotify):
         artistList = [ x for x in artistList if x['popularity']>=popThresh]
         artistList.sort(key=lambda x: x['popularity'], reverse=True)
         # Check for perfect matches
+        # TODO: DRY SpotifyExt should be replaced with self.__class__ (but self isnt in scope)
         for artist in artistList:
-            if artist['name'] == possibleArtist:
+            if SpotifyExt.compareNames(artist['name'], possibleArtist):
                 return artist
         else:
             return None
@@ -352,8 +369,9 @@ class SpotifyExt(spotipy.Spotify):
             return None
         # Check for match
         # TODO: is it necessary to check the name again? Does search only return perfect matches?
+        # TODO: DRY SpotifyExt should be replaced with self.__class__ (but self isnt in scope)
         elif found_artist['artists']['items'] \
-         and found_artist['artists']['items'][0]['name'] == PartialName \
+         and SpotifyExt.compareNames(found_artist['artists']['items'][0]['name'], PartialName) \
          and found_artist['artists']['items'][0]['popularity'] >= popThresh:
             return found_artist['artists']['items'][0]   
         # Recurse with partial name
@@ -367,7 +385,7 @@ class SpotifyExt(spotipy.Spotify):
     
             Parameters:
                 artists - list of spotipy artists 
-                numSongs - function that determines number of tracks to add from each artist
+                numSongs - function provides number of tracks to add from each artist
     
             Returns:
                 playlistTracks - list of tracks
