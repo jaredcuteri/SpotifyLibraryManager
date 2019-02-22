@@ -1,5 +1,5 @@
-try: from PIL import Image, ImageEnhance
-except ImportError: import Image, ImageEnhance
+try: from PIL import Image, ImageEnhance, ImageTk
+except ImportError: import Image, ImageEnhance, ImageTk
 import pytesseract
 import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
@@ -7,7 +7,7 @@ import re
 
 pytesseract.tesseract_cmd = r'/user/local/Cellar/tesseract/4.0.0/bin/tesseract'
 
-def promptUserForCorrections(initialText,fg_color=None,bg_color=None):
+def promptUserForCorrections(initialText,image=None):
     ''' promptUserForCorrections is a GUI that allows the user to modify the text string
     
          Parameters:
@@ -19,26 +19,40 @@ def promptUserForCorrections(initialText,fg_color=None,bg_color=None):
     '''
     # TODO: Better formatting of window, more descriptive labels, add some colors
     finalText = None
+    
+    #TODO: Set colors to match poster
+    
     master = tk.Tk()
-    master.geometry("300x450")
-    L1 = tk.Label(master, text='List of Artists')
-    L2 = tk.Label(master, text='Modify as necessary')
-    L1.pack(fill=tk.X)
-    L2.pack(fill=tk.X)
-    e = ScrolledText(master)
-    e.insert(tk.INSERT,initialText)
-    e.pack(fill=tk.X)
-    e.focus_set()
+    master.title("Setlist Editor")
+
+    leftFrame = tk.Frame(master,width=300,height=400,borderwidth=2,relief="solid")
+    rightFrame = tk.Frame(master,width=700,height=400,borderwidth=2,relief="solid")
+
+    leftFrame.pack(side=tk.LEFT,expand=True,fill=tk.BOTH)
+    rightFrame.pack(side=tk.RIGHT,expand=True,fill=tk.BOTH)
+    
+    L1 = tk.Label(leftFrame, text='List of Artists')        
+    
+    T1 = ScrolledText(leftFrame, width=40,padx=1, borderwidth=2,relief="solid")
+    T1.insert(tk.INSERT,initialText)
+
+    image_resized = image.resize((350,350), Image.ANTIALIAS)
+    photo_img = ImageTk.PhotoImage(image_resized)
+    L3 = tk.Label(rightFrame, image=photo_img,relief=tk.RAISED)
     
     def callback():
         nonlocal finalText
-        finalText = e.get(1.0,tk.END)
+        finalText = T1.get(1.0,tk.END)
         master.destroy()
         
-    b = tk.Button(master, text = "Submit", width=10, command=callback)
+    B1 = tk.Button(leftFrame, width=30, text = "Submit Setlist", command=callback)
 
-    b.pack()
-
+    L1.pack()
+    T1.pack()
+    L3.pack()
+    B1.pack()
+    T1.focus_set()
+    
     tk.mainloop()
     
     return finalText
@@ -78,10 +92,7 @@ def generateSetlistFromImage(image):
      
     # Open poster
     poster = Image.open(image)
-    
-    # TODO: Use top 2 colors for tk prompt
-    colors = poster.getcolors()
-    
+        
     poster_bw = convertImgToBlackOnWhite(poster)
 
     #pull text from poster
@@ -91,7 +102,7 @@ def generateSetlistFromImage(image):
     formatted_poster_text = handleWeirdCharacters(raw_poster_text)
 
     # Allow user to review and modify text
-    poster_text = promptUserForCorrections(formatted_poster_text)
+    poster_text = promptUserForCorrections(formatted_poster_text,poster)
     
     # Parse text based on new line
     setlist = re.split('\W*\n+\W*',poster_text)
