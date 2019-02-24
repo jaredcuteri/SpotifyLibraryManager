@@ -26,7 +26,7 @@ def promptUserForCorrections(initialText,image=None):
     master.title("Setlist Editor")
 
     leftFrame = tk.Frame(master,width=300,height=400,borderwidth=2,relief="solid")
-    rightFrame = tk.Frame(master,width=700,height=400,borderwidth=2,relief="solid")
+    rightFrame = tk.Frame(master,width=900,height=400,borderwidth=2,relief="solid")
 
     leftFrame.pack(side=tk.LEFT,expand=True,fill=tk.BOTH)
     rightFrame.pack(side=tk.RIGHT,expand=True,fill=tk.BOTH)
@@ -36,7 +36,7 @@ def promptUserForCorrections(initialText,image=None):
     T1 = ScrolledText(leftFrame, width=40,padx=1, borderwidth=2,relief="solid")
     T1.insert(tk.INSERT,initialText)
 
-    image_resized = image.resize((350,350), Image.ANTIALIAS)
+    image_resized = image.resize((800,800), Image.ANTIALIAS)
     photo_img = ImageTk.PhotoImage(image_resized)
     L3 = tk.Label(rightFrame, image=photo_img,relief=tk.RAISED)
     
@@ -48,7 +48,7 @@ def promptUserForCorrections(initialText,image=None):
     B1 = tk.Button(leftFrame, width=30, text = "Submit Setlist", command=callback)
 
     L1.pack()
-    T1.pack()
+    T1.pack(expand=True,fill=tk.Y)
     L3.pack()
     B1.pack()
     T1.focus_set()
@@ -78,7 +78,7 @@ def convertImgToBlackOnWhite(image):
     
 def handleWeirdCharacters(text):
     # Weird Character Handling
-    weird_characters = ['\n','-','»','«','>','°','*','~','.']
+    weird_characters = ['\n','-','»','«','>','°','*','~','.','=']
     text = text.replace('’','\'')
     for character in weird_characters:
         text = text.replace(character,'\n')

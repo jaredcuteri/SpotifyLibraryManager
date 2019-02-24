@@ -11,8 +11,7 @@ class SpotifyExt(spotipy.Spotify):
     to pulling 50 tracks at a time with spotipy, spotipyExt removes this limit.
     
     '''
-    __doc__ += spotipy.Spotify.__doc__ 
-    
+    __doc__ += spotipy.Spotify.__doc__     
     def __init__(self, *args, **kwargs):
         super().__init__(*args,**kwargs)
         
@@ -114,8 +113,7 @@ class SpotifyExt(spotipy.Spotify):
                 if idxPlaylist < numPlaylistsToProcess+offset:
                     playlists['items'].append(item)            
         return playlists
-        
-    
+           
     def tracksAddedBefore(self, trackList, date):
         ''' Return list of tracks added before date (YYYYMMDD)
 
@@ -327,7 +325,7 @@ class SpotifyExt(spotipy.Spotify):
     
         '''
         # sort artists by popularity
-        popThresh = 10 # Popularity Threshold
+        popThresh = 0 # Popularity Threshold
         artistList = [ x for x in artistList if x['popularity']>=popThresh]
         artistList.sort(key=lambda x: x['popularity'], reverse=True)
         # Check for perfect matches
@@ -356,10 +354,10 @@ class SpotifyExt(spotipy.Spotify):
         if PartialName==None:
             PartialName = FullName
         
-        # Base popularity threshold off how much of name has been removed
-        # TODO: tune theshold scheduling
         subStringRatio = len(PartialName)/len(FullName)
-        popThresh = 20*(-0.3+(1-subStringRatio))
+        
+        # Popularity cutoff threshhold
+        popThresh = 0
         
         # TODO: not ideal to create spotipy objects for each call
         found_artist = self.search(PartialName,limit=1,type='artist')

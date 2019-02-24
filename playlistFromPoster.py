@@ -9,8 +9,8 @@ import spotipyExt
 
 
 USERNAME = '1232863129'
-IMAGE = 'posters/shaky.jpg'
-PLAYLIST_NAME = 'Shaky Beats'
+IMAGE = 'posters/resist.jpg'
+PLAYLIST_NAME = 'Resistance'
 
 # Inline functions
 rSlice = lambda x: x[:-1]
@@ -27,7 +27,7 @@ spotify = spotipyExt.initializeSpotifyToken(scope)
 # Find artists
 artistsDict = dict.fromkeys(setlist)
 for possibleArtist in setlist:
-    result = spotify.search(possibleArtist, limit=10, type='artist', market=None)
+    result = spotify.search(possibleArtist, limit=None, type='artist', market=None)
     possibleArtistMatches = result['artists']['items']
     
     foundArtist = spotify.fullArtistMatch(possibleArtistMatches, possibleArtist)
