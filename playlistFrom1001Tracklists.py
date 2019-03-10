@@ -20,6 +20,7 @@ import requests
 
 USERNAME = '1232863129'
 PL_URL = 'https://www.1001tracklists.com/tracklist/28uj5vr1/luttrell-crssd-fest-united-states-2019-03-03.html'
+SCOPE = 'playlist-modify-private'
 
 # Header is needed to make Website believe this request is coming from a browser
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36'} # This is chrome, you can set whatever browser you like
@@ -36,4 +37,14 @@ setlist_title = tree.xpath('//body/meta[@itemprop="name"]/@content')
 
 result = tree.xpath('//span[@class="trackFormat"]/span[@class="blueTxt"]/text()')
 artists_tracks = [pair for pair in zip(*[iter(result)]*2)]
-print(artists_tracks)
+# TODO: Remove ID - ID
+# Get track IDs
+sp = spotipyExt.initializeSpotifyToken(SCOPE)
+setlistIDs = []
+for artist, track in artists_tracks:
+    track = sp.search(artist+' '+track,limit=1,type='track')
+    # TODO Handle missing tracks
+    setlistIDs.extend(track['tracks']['items'][0]['id'])
+    
+playlist = sp.user_playlist_create(USERNAME,setlist_title,public=True)
+sp.user_playlist_add_tracks(USERNAME,playlist['id'],setlistIDs)
