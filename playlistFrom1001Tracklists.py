@@ -18,9 +18,8 @@ import spotipyExt
 from lxml import html
 import requests
 
-USERNAME = '1232863129'
 PL_URL = 'https://www.1001tracklists.com/tracklist/28uj5vr1/luttrell-crssd-fest-united-states-2019-03-03.html'
-SCOPE = 'playlist-modify-private'
+SCOPE = 'user-library-read playlist-modify-private playlist-read-private'
 
 # Header is needed to make Website believe this request is coming from a browser
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36'} # This is chrome, you can set whatever browser you like
@@ -35,16 +34,35 @@ if response.status_code >= 300:
 tree = html.fromstring(response.content)
 setlist_title = tree.xpath('//body/meta[@itemprop="name"]/@content')
 
-result = tree.xpath('//span[@class="trackFormat"]/span[@class="blueTxt"]/text()')
-artists_tracks = [pair for pair in zip(*[iter(result)]*2)]
+songs = tree.xpath('//div[@class="tlToogleData"][@itemprop="tracks"]/meta[@itemprop="name"]/@content')
+
+def getTrackID(sp, trackName, artistName=None):
+    tracks = sp.search(trackName,type='track')
+    if tracks['tracks']['items']:
+        if len(tracks['tracks']['items'])>1:
+            # Use artistname to resolve
+            tracks = sp.search(artistName + ' ' + trackName,limit=1,type='track')        
+        return tracks['tracks']['items'][0]['id']
+    else:
+        return None    
+
 # TODO: Remove ID - ID
-# Get track IDs
+
 sp = spotipyExt.initializeSpotifyToken(SCOPE)
-setlistIDs = []
-for artist, track in artists_tracks:
-    track = sp.search(artist+' '+track,limit=1,type='track')
-    # TODO Handle missing tracks
-    setlistIDs.extend(track['tracks']['items'][0]['id'])
-    
-playlist = sp.user_playlist_create(USERNAME,setlist_title,public=True)
-sp.user_playlist_add_tracks(USERNAME,playlist['id'],setlistIDs)
+
+setlistIDs, tracksNotFound = [], []
+artists_tracks = [tuple((name) for name in song.split(' - ')) for song in songs]
+for artistName, trackName in artists_tracks:
+    trackID = getTrackID(sp, trackName, artistName)
+    # TODO: Add way to resolve missing tracks
+    if trackID:
+        setlistIDs.append(trackID)
+    else:
+        tracksNotFound.append((artistName,trackName))
+
+#Need to fix setlist title
+setlist_title = setlist_title[0]
+
+playlist = sp.user_playlist_create(spotipyExt.DEFAULT_USERNAME,setlist_title,public=False)
+sp.user_playlist_add_tracks(spotipyExt.DEFAULT_USERNAME,playlist['id'],setlistIDs)
+print("The following tracks could not be found", tracksNotFound)
