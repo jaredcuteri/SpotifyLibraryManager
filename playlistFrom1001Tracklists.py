@@ -19,6 +19,7 @@ from lxml import html
 import requests
 
 PL_URL = 'https://www.1001tracklists.com/tracklist/28uj5vr1/luttrell-crssd-fest-united-states-2019-03-03.html'
+PL_URL = 'https://www.1001tracklists.com/tracklist/12nmwhjt/lane-8-spring-2019-mixtape-2019-03-06.html'
 SCOPE = 'user-library-read playlist-modify-private playlist-read-private'
 
 # Header is needed to make Website believe this request is coming from a browser
@@ -34,14 +35,18 @@ if response.status_code >= 300:
 tree = html.fromstring(response.content)
 setlist_title = tree.xpath('//body/meta[@itemprop="name"]/@content')
 
+# TODO: Weird accents are not being properly encoded
 songs = tree.xpath('//div[@class="tlToogleData"][@itemprop="tracks"]/meta[@itemprop="name"]/@content')
 
+# TODO: Clean up search strategy
 def getTrackID(sp, trackName, artistName=None):
     tracks = sp.search(trackName,type='track')
     if tracks['tracks']['items']:
         if len(tracks['tracks']['items'])>1:
-            # Use artistname to resolve
-            tracks = sp.search(artistName + ' ' + trackName,limit=1,type='track')        
+            # Use artistname to resolve    
+            tracks = sp.search(artistName + ' ' + trackName,limit=1,type='track')
+            if not tracks['tracks']['items']:
+                tracks = sp.search(trackName,limit=1,type='track')   
         return tracks['tracks']['items'][0]['id']
     else:
         return None    
