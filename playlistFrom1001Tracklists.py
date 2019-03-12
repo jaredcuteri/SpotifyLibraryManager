@@ -32,10 +32,9 @@ response = requests.get(PL_URL, headers=headers)
 if response.status_code >= 300:
     raise RequestError("Failed to access webpage. Response Code: {0}".format(response.status_code))
 
-tree = html.fromstring(response.content)
+tree = html.fromstring(response.text)
 setlist_title = tree.xpath('//body/meta[@itemprop="name"]/@content')
 
-# TODO: Weird accents are not being properly encoded
 songs = tree.xpath('//div[@class="tlToogleData"][@itemprop="tracks"]/meta[@itemprop="name"]/@content')
 
 # TODO: Clean up search strategy
