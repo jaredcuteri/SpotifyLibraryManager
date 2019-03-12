@@ -350,6 +350,7 @@ class SpotifyExt(spotipy.Spotify):
               - final_result: artist found or none
         
         '''
+        print('**In Partial Artist Match')
         # Initializing PartialName for recursion
         if PartialName==None:
             PartialName = FullName
@@ -399,6 +400,19 @@ class SpotifyExt(spotipy.Spotify):
             songCount = numSongs(idxArt,numArt)
             playlistTracks+= artTopTracks['tracks'][:songCount]
         return playlistTracks
+
+    # TODO: Clean up search strategy
+    def getTrackID(self, trackName, artistName=None):
+        tracks = self.search(trackName,type='track')
+        if tracks['tracks']['items']:
+            if len(tracks['tracks']['items'])>1:
+                # Use artistname to resolve    
+                tracks = self.search(artistName + ' ' + trackName,limit=1,type='track')
+                if not tracks['tracks']['items']:
+                    tracks = self.search(trackName,limit=1,type='track')   
+            return tracks['tracks']['items'][0]['id']
+        else:
+            return None
 
 # Get Spotify Authorization and return user spotify token
 def initializeSpotifyToken(scope,username=DEFAULT_USERNAME):

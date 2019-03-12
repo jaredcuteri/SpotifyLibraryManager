@@ -18,55 +18,46 @@ import spotipyExt
 from lxml import html
 import requests
 
-PL_URL = 'https://www.1001tracklists.com/tracklist/28uj5vr1/luttrell-crssd-fest-united-states-2019-03-03.html'
 PL_URL = 'https://www.1001tracklists.com/tracklist/12nmwhjt/lane-8-spring-2019-mixtape-2019-03-06.html'
-SCOPE = 'user-library-read playlist-modify-private playlist-read-private'
 
-# Header is needed to make Website believe this request is coming from a browser
-headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36'} # This is chrome, you can set whatever browser you like
+def PlaylistFrom1001Tracklist(playlistURL):
+    class RequestError(Exception):
+        pass
 
-class RequestError(Exception):
-    pass
+    # Header is needed to make Website believe this request is coming from a browser
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36'} # This is chrome, you can set whatever browser you like
     
-response = requests.get(PL_URL, headers=headers)
-if response.status_code >= 300:
-    raise RequestError("Failed to access webpage. Response Code: {0}".format(response.status_code))
+    response = requests.get(playlistURL, headers=headers)
+    if response.status_code >= 300:
+        raise RequestError("Failed to access webpage. Response Code: {0}".format(response.status_code))
 
-tree = html.fromstring(response.text)
-setlist_title = tree.xpath('//body/meta[@itemprop="name"]/@content')
+    tree = html.fromstring(response.text)
+    setlist_title = tree.xpath('//body/meta[@itemprop="name"]/@content')
 
-songs = tree.xpath('//div[@class="tlToogleData"][@itemprop="tracks"]/meta[@itemprop="name"]/@content')
+    songs = tree.xpath('//div[@class="tlToogleData"][@itemprop="tracks"]/meta[@itemprop="name"]/@content')
+            
+    sp_scope = 'user-library-read playlist-modify-private playlist-read-private'
+    sp = spotipyExt.initializeSpotifyToken(sp_scope)
 
-# TODO: Clean up search strategy
-def getTrackID(sp, trackName, artistName=None):
-    tracks = sp.search(trackName,type='track')
-    if tracks['tracks']['items']:
-        if len(tracks['tracks']['items'])>1:
-            # Use artistname to resolve    
-            tracks = sp.search(artistName + ' ' + trackName,limit=1,type='track')
-            if not tracks['tracks']['items']:
-                tracks = sp.search(trackName,limit=1,type='track')   
-        return tracks['tracks']['items'][0]['id']
+    setlistIDs, tracksNotFound = [], []
+    artists_tracks = [tuple((name) for name in song.split(' - ')) for song in songs]
+    for artistName, trackName in artists_tracks:
+        trackID = sp.getTrackID(trackName, artistName)
+        # TODO: Add way to resolve missing tracks
+        if trackID:
+            setlistIDs.append(trackID)
+        else:
+            tracksNotFound.append((artistName,trackName))
+
+    #Need to fix setlist title
+    setlist_title = setlist_title[0]
+
+    playlist = sp.user_playlist_create(spotipyExt.DEFAULT_USERNAME,setlist_title,public=False)
+    sp.user_playlist_add_tracks(spotipyExt.DEFAULT_USERNAME,playlist['id'],setlistIDs)
+    if tracksNotFound:
+        print("The following tracks could not be found", tracksNotFound)
     else:
-        return None    
-
-# TODO: Remove ID - ID
-
-sp = spotipyExt.initializeSpotifyToken(SCOPE)
-
-setlistIDs, tracksNotFound = [], []
-artists_tracks = [tuple((name) for name in song.split(' - ')) for song in songs]
-for artistName, trackName in artists_tracks:
-    trackID = getTrackID(sp, trackName, artistName)
-    # TODO: Add way to resolve missing tracks
-    if trackID:
-        setlistIDs.append(trackID)
-    else:
-        tracksNotFound.append((artistName,trackName))
-
-#Need to fix setlist title
-setlist_title = setlist_title[0]
-
-playlist = sp.user_playlist_create(spotipyExt.DEFAULT_USERNAME,setlist_title,public=False)
-sp.user_playlist_add_tracks(spotipyExt.DEFAULT_USERNAME,playlist['id'],setlistIDs)
-print("The following tracks could not be found", tracksNotFound)
+        print("All tracks added successfully")
+    
+if __name__ == '__main__':
+    PlaylistFrom1001Tracklist(PL_URL)
