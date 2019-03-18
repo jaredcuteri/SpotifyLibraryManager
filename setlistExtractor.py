@@ -30,8 +30,7 @@ def getDominantColorsFromImage(image):
         if sum(color) < blackTol:
             return False
         else:
-            return True
-            
+            return True        
     def isNotGrey(colorTuple):
         # TODO: Tune Eps
         eps = 20
@@ -75,7 +74,6 @@ def promptUserForCorrections(initialText,image=None):
     # TODO: Better formatting of window, more descriptive labels, add some colors
     finalText = None
     
-
     colors = getDominantColorsFromImage(image)
     
     colorFG1 = colors[0]
@@ -85,9 +83,8 @@ def promptUserForCorrections(initialText,image=None):
     def rgbfy(rgb):
         return "#%02x%02x%02x" % rgb
     master = tk.Tk()
-    master.title("Setlist Editor")
+    master.title("Spotify Playlist Generator")
     
-
     leftFrame = tk.Frame(master,width=300,height=400,bd=2,bg=rgbfy(colorBG1),\
      highlightbackground=rgbfy(colorFG1), highlightcolor=rgbfy(colorFG1), highlightthickness=3)
     rightFrame = tk.Frame(master,width=900,height=400,bd=2,bg=rgbfy(colorBG1),\
@@ -95,7 +92,7 @@ def promptUserForCorrections(initialText,image=None):
     leftFrame.pack(side=tk.LEFT,expand=True,fill=tk.BOTH)
     rightFrame.pack(side=tk.RIGHT,expand=True,fill=tk.BOTH)
     
-    L1 = tk.Label(leftFrame, text='List of Artists',bg=rgbfy(colorBG1))        
+    L1 = tk.Label(leftFrame, text='List of Items',bg=rgbfy(colorBG1))        
     
     T1 = ScrolledText(leftFrame, width=40,borderwidth=2,bg=rgbfy(colorBG1))
     T1.insert(tk.INSERT,initialText)
@@ -110,7 +107,7 @@ def promptUserForCorrections(initialText,image=None):
         finalText = T1.get(1.0,tk.END)
         master.destroy()
         
-    B1 = tk.Button(leftFrame, width=30, text = "Submit Setlist", bg=rgbfy(colorBG1),command=callback)
+    B1 = tk.Button(leftFrame, width=30, text = "Submit Setlist",command=callback)
 
     L1.pack()
     T1.pack(expand=True,fill=tk.Y)
