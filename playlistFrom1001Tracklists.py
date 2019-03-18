@@ -19,7 +19,7 @@ from lxml import html
 import requests
 
 PL_URL = 'https://www.1001tracklists.com/tracklist/12nmwhjt/lane-8-spring-2019-mixtape-2019-03-06.html'
-
+PL_URL = 'https://www.1001tracklists.com/tracklist/t9hr719/anna-city-steps-crssd-fest-united-states-2018-03-04.html'
 def PlaylistFrom1001Tracklist(playlistURL):
     class RequestError(Exception):
         pass

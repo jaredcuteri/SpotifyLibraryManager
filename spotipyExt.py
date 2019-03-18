@@ -350,7 +350,6 @@ class SpotifyExt(spotipy.Spotify):
               - final_result: artist found or none
         
         '''
-        print('**In Partial Artist Match')
         # Initializing PartialName for recursion
         if PartialName==None:
             PartialName = FullName

@@ -9,8 +9,8 @@ import spotipyExt
 
 
 USERNAME = '1232863129'
-IMAGE = 'posters/resist.jpg'
-PLAYLIST_NAME = 'Resistance'
+IMAGE = 'posters/sa.jpg'
+PLAYLIST_NAME = 'Spring Awakening 2019'
 
 # Inline functions
 rSlice = lambda x: x[:-1]
