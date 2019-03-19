@@ -5,7 +5,17 @@ import tkinter as tk
 from tkinter.scrolledtext import ScrolledText
 import re
 
+import math
+import setlistExtractor
+import spotipyExt
+
+USERNAME = '1232863129'
 pytesseract.tesseract_cmd = r'/user/local/Cellar/tesseract/4.0.0/bin/tesseract'
+
+# Inline functions
+rSlice = lambda x: x[:-1]
+lSlice = lambda x: x[1:]
+trackCountBasedOnPopularity = lambda x,y :(math.ceil((1-(x/y))/0.25)+1)
 
 def getDominantColorsFromImage(image):
     
@@ -163,14 +173,52 @@ def generateSetlistFromImage(image):
     # format text by subbing out weird characters and spacing
     formatted_poster_text = handleWeirdCharacters(raw_poster_text)
 
-    # Allow user to review and modify text
-    poster_text = promptUserForCorrections(formatted_poster_text,poster)
-    
     # Parse text based on new line
-    setlist = re.split('\W*\n+\W*',poster_text)
-
-    # Remove empty lines
-    setlist = list(filter(None, setlist))
+    setlist = re.split('\W*\n+\W*',formatted_poster_text)
     
     return setlist
 
+
+def CreatePlaylist(setlist,playlistName):
+
+    # spotipy auth/init
+    scope = 'user-library-read playlist-modify-private playlist-read-private'
+    spotify = spotipyExt.initializeSpotifyToken(scope)
+
+    # Find artists
+    artistsDict = dict.fromkeys(setlist)
+    for possibleArtist in setlist:
+        result = spotify.search(possibleArtist, limit=None, type='artist', market=None)
+        possibleArtistMatches = result['artists']['items']
+    
+        foundArtist = spotify.fullArtistMatch(possibleArtistMatches, possibleArtist)
+        if foundArtist:
+            artistsDict[possibleArtist] = foundArtist
+        # Check for a partial match
+        else:
+            # Add in partial name searching
+            foundArtist = spotify.partialArtistMatch(possibleArtist,slicer=rSlice)
+            if foundArtist:
+                artistsDict[possibleArtist] = foundArtist
+            else:
+                foundArtist = spotify.partialArtistMatch(possibleArtist,slicer=lSlice)
+                if foundArtist:
+                    artistsDict[possibleArtist] = foundArtist
+                else:
+                    artistsDict[possibleArtist] = None
+        #TODO: Add progress bar of matches and misses
+
+    matchedArtists = [v for k,v in artistsDict.items() if v is not None]  
+    unmatchedArtists = [k for k,v in artistsDict.items() if v is None]
+
+    print('+ Found %d/%d of possible artists.'%(len(matchedArtists),len(setlist)))
+    print('-- The following possible artists could not be found: ',unmatchedArtists)
+
+    playlistTracks = spotify.getTracksByArtists(matchedArtists,numSongs=trackCountBasedOnPopularity)
+    
+    # Create playlist and add songs
+    playlist = spotify.user_playlist_create(USERNAME, playlistName, public=True)
+    playlistTracksID = [track['id'] for track in playlistTracks]
+    spotify.user_playlist_add_tracks(USERNAME, playlist['id'], playlistTracksID)
+    print('+++ Playlist Generated: ',playlistName)
+    print('++++ %d tracks added'%len(playlistTracksID))
