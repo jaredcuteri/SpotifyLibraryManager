@@ -21,50 +21,84 @@ class playlistGenWindow:
         self.finalText = self.T1.get(1.0,tk.END)
         master.destroy()
     
-    
+        
     def __init__(self):
+        defaultBgColor = 'DarkOrange4'
+        defaultFgColor = 'white'
         
         self.finalText = None
         
         self.master = tk.Tk()
         self.master.title("Spotify Playlist Generator")
-        self.topFrame = tk.Frame(self.master,width=1200,height=100)
-        self.leftFrame = tk.Frame(self.master,width=300,height=400,bd=2, highlightthickness=3)
-        self.rightFrame = tk.Frame(self.master,width=900,height=400,bd=2, highlightthickness=3)
-        
-        self.topFrame.pack(expand=True,fill=tk.BOTH)
-        self.leftFrame.pack(side=tk.LEFT,expand=True,fill=tk.BOTH)
-        self.rightFrame.pack(side=tk.RIGHT,expand=True,fill=tk.BOTH)
-        
+        self.master.configure(background=defaultBgColor)
         # Top Frame Items
-        self.PlaylistName = tk.Entry(self.master,width=300)
+        self.PlaylistNameLabel = tk.Label(self.master, 
+                                             text='Playlist Name:',
+                                             width=20,
+                                             fg=defaultFgColor,
+                                             bg=defaultBgColor)
+        self.PlaylistName = tk.Entry(self.master,
+                                        width=40,
+                                        fg=defaultFgColor,
+                                        bg=defaultBgColor)
         
-        self.currSourceMode = tk.StringVar(self.master) 
-        self.currSourceMode.set("Poster Generator")
-        self.SourceMode = tk.OptionMenu(self.master,self.currSourceMode,"Poster Generator","1001Tracklist Generator")
+        self.sourceMode = tk.StringVar(self.master) 
+        self.sourceMode.set("Poster Generator")
+        self.ModeDropdown = tk.OptionMenu(self.master,
+                                        self.sourceMode,
+                                        "Poster Generator",
+                                        "1001Tracklist Generator")
+                                        
+        self.ModeDropdown.config(width=20 , bg=defaultBgColor, fg=defaultFgColor)
+        
         # Either a url or a file location
-        self.SourceLocation = tk.Button(self.master,text='Browse',command=self.cbOpenPoster)
-        self.PullButton = tk.Button(self.topFrame,width=30,text="Pull From Source")
+        self.SourceLocation = tk.Button(self.master, 
+                                        text='Select Data Source', 
+                                        command=self.cbOpenPoster, 
+                                        width=40,
+                                        fg=defaultFgColor,
+                                        highlightbackground=defaultBgColor)
         
-        # Left Frame Items
-        self.TitleList = tk.Label(self.leftFrame, text='List of Items')        
-        self.ItemsList = ScrolledText(self.leftFrame, width=40,borderwidth=2)
+        self.ListTitle = tk.Label(self.master,
+                                    text = 'List of Found Items:',
+                                    width = 60, 
+                                    fg=defaultFgColor,
+                                    bg=defaultBgColor)
+                                    
+        self.ListItems = ScrolledText(self.master, 
+                                      width = 60,
+                                      fg=defaultFgColor,
+                                      bg=defaultBgColor,
+                                      highlightbackground=defaultBgColor,
+                                      borderwidth = 2)
+                                        
         #self.T1.insert(tk.INSERT,initialText)
-        self.SubmitButton = tk.Button(self.leftFrame, width=30, text = "Generate Playlist")
-        
-        # Right Frame Items
-        self.TargetImage = tk.Label(self.rightFrame,relief=tk.RAISED)
+        # TODO: Add Logo As Default Image
+        self.TargetImage = tk.Label(self.master,
+                                    width = 60,
+                                    fg=defaultFgColor,
+                                    bg=defaultBgColor,
+                                    relief = tk.RAISED)
+                                    
+        self.SubmitButton = tk.Button(self.master,
+                                      text = "Generate Playlist",
+                                      width = 40,
+                                      fg=defaultFgColor,
+                                      highlightbackground=defaultBgColor)
+
+
             
         # Packing
-        self.PlaylistName.pack()
-        self.SourceMode.pack()
-        self.SourceLocation.pack()
-        self.PullButton.pack()
-        self.TitleList.pack()
-        self.ItemsList.pack(expand=True,fill=tk.Y)
-        self.TargetImage.pack()
-        self.SubmitButton.pack()
-        self.ItemsList.focus_set()
+        self.PlaylistNameLabel.grid(row=0,column=0)
+        self.PlaylistName.grid(row=0,column=1,columnspan=2)
+        self.ModeDropdown.grid(row=0,column=3)
+        self.SourceLocation.grid(row=0,column=4, columnspan=2)
+        
+        self.ListTitle.grid(row=1,column=0,columnspan=3)
+        self.ListItems.grid(row=2,rowspan=8,column=0,columnspan=3)
+        self.TargetImage.grid(row=1,rowspan=11,column=3,columnspan=3)
+        self.SubmitButton.grid(row=11,column=0,columnspan=3)
+        #self.ListItems.focus_set()
     
         tk.mainloop()
         
