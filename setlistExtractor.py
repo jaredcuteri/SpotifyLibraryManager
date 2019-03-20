@@ -17,7 +17,7 @@ rSlice = lambda x: x[:-1]
 lSlice = lambda x: x[1:]
 trackCountBasedOnPopularity = lambda x,y :(math.ceil((1-(x/y))/0.25)+1)
 
-def getDominantColorsFromImage(image):
+def GetDominantColorsFromImage(image):
     
     colorPalleteCount = 256
     image_redux = image.convert("P",palette=Image.ADAPTIVE, colors=colorPalleteCount)
