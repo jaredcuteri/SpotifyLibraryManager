@@ -8,6 +8,8 @@ import re
 import math
 import setlistExtractor
 import spotipyExt
+from lxml import html
+import requests
 
 USERNAME = '1232863129'
 pytesseract.tesseract_cmd = r'/user/local/Cellar/tesseract/4.0.0/bin/tesseract'
@@ -178,16 +180,60 @@ def generateSetlistFromImage(image):
     
     return setlist
 
+def GetTracksFromXML(playlistURL):
+    class RequestError(Exception):
+        pass
 
-def CreatePlaylist(setlist,playlistName):
+    # Header is needed to make Website believe this request is coming from a browser
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36'} # This is chrome, you can set whatever browser you like
+    
+    response = requests.get(playlistURL, headers=headers)
+    if response.status_code >= 300:
+        raise RequestError("Failed to access webpage. Response Code: {0}".format(response.status_code))
+
+    tree = html.fromstring(response.text)
+    setlist_title = tree.xpath('//body/meta[@itemprop="name"]/@content')
+
+    songs = tree.xpath('//div[@class="tlToogleData"][@itemprop="tracks"]/meta[@itemprop="name"]/@content')
+    return songs, setlist_title
+    
+def CreatePlaylistFromTracks(setlist,playlistName):
+    sp_scope = 'user-library-read playlist-modify-private playlist-read-private'
+    sp = spotipyExt.initializeSpotifyToken(sp_scope)
+
+    setlistIDs, tracksNotFound = [], []
+    artists_tracks = [tuple((name) for name in song.split(' - ')) for song in setlist]
+    for artistName, trackName in artists_tracks:
+        trackID = sp.getTrackID(trackName, artistName)
+        # TODO: Add way to resolve missing tracks
+        if trackID:
+            setlistIDs.append(trackID)
+        else:
+            tracksNotFound.append((artistName,trackName))
+
+    playlist = sp.user_playlist_create(spotipyExt.DEFAULT_USERNAME,playlistName,public=False)
+    sp.user_playlist_add_tracks(spotipyExt.DEFAULT_USERNAME,playlist['id'],setlistIDs)
+    if tracksNotFound:
+        print("The following tracks could not be found", tracksNotFound)
+    else:
+        print("All tracks added successfully")
+            
+def PlaylistFrom1001Tracklist(playlistURL):
+
+    setlist, playlistName = GetTracksFromXML(playlistURL)
+    # TODO: Possible duplicate sp objects?
+    
+    CreatePlaylistFromTracks(setlist,playlistName)
+        
+def CreatePlaylistFromArtists(artistList,playlistName):
 
     # spotipy auth/init
     scope = 'user-library-read playlist-modify-private playlist-read-private'
     spotify = spotipyExt.initializeSpotifyToken(scope)
 
     # Find artists
-    artistsDict = dict.fromkeys(setlist)
-    for possibleArtist in setlist:
+    artistsDict = dict.fromkeys(artistList)
+    for possibleArtist in artistList:
         result = spotify.search(possibleArtist, limit=None, type='artist', market=None)
         possibleArtistMatches = result['artists']['items']
     
@@ -211,7 +257,7 @@ def CreatePlaylist(setlist,playlistName):
     matchedArtists = [v for k,v in artistsDict.items() if v is not None]  
     unmatchedArtists = [k for k,v in artistsDict.items() if v is None]
 
-    print('+ Found %d/%d of possible artists.'%(len(matchedArtists),len(setlist)))
+    print('+ Found %d/%d of possible artists.'%(len(matchedArtists),len(artistList)))
     print('-- The following possible artists could not be found: ',unmatchedArtists)
 
     playlistTracks = spotify.getTracksByArtists(matchedArtists,numSongs=trackCountBasedOnPopularity)
