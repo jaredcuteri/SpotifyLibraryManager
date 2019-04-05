@@ -4,6 +4,7 @@ import pytesseract
 import tkinter as tk
 from tkinter import filedialog as tkfd
 from tkinter.scrolledtext import ScrolledText
+from tkinter import ttk
 import setlistExtractor
 
 class playlistGenWindow:
@@ -13,7 +14,6 @@ class playlistGenWindow:
     @staticmethod
     def rgbfy(rgb):
         return "#%02x%02x%02x" % rgb
-    
     
     def UpdateColorTheme(self):
         colors = setlistExtractor.GetDominantColorsFromImage(self.rawImage)
@@ -51,12 +51,16 @@ class playlistGenWindow:
         self.masterElemEntry['ListItems'].insert(tk.INSERT,'\n'.join(setlist))
         self.masterElemEntry['PlaylistName'].insert(tk.INSERT,playlistName[0])
         self.urlPromptWindow.destroy()
-        
-    def PullFrom1001Tracklists(self):
-        for _ , elem in self.urlPromptElem.items():
+    
+    @staticmethod
+    def PackWindow(elements):
+        for _ , elem in elements.items():
             elem.pack()
             elem.configure(fg=playlistGenWindow.defFgColor,
                            bg=playlistGenWindow.defBgColor)
+                           
+    def PullFrom1001Tracklists(self):
+        self.urlPromptWindow.deiconify()
         self.urlPromptWindow.lift()
         self.urlPromptWindow.attributes("-topmost", True)
     
@@ -85,6 +89,7 @@ class playlistGenWindow:
         else:
             raise Exception('Source Mode Not Implemented')
         # TODO: Create a progress bar instead of destroying
+        # TODO: Instead of destroying, reset gui
         self.master.destroy()
     
         
@@ -155,7 +160,14 @@ class playlistGenWindow:
                                       fg=playlistGenWindow.defFgColor,
                                       highlightbackground=playlistGenWindow.defBgColor)
 
-
+        s = ttk.Style()
+        s.theme_use('clam')
+        s.configure("red.Horizontal.TProgressbar", foreground='green', background='grey')
+        self.masterElem['ProgressBar'] = ttk.Progressbar(self.master,
+                                                      style="green.Horizontal.TProgressbar",
+                                                      orient=tk.HORIZONTAL,
+                                                      length=800,
+                                                      mode='determinate')
             
         # Packing
         self.masterElem['PlaylistNameLabel'].grid(row=0,column=0)
@@ -167,6 +179,7 @@ class playlistGenWindow:
         self.masterElemEntry['ListItems'].grid(row=2,rowspan=8,column=0,columnspan=3)
         self.masterElem['TargetImage'].grid(row=1,rowspan=10,column=3,columnspan=3)
         self.masterElem['SubmitButton'].grid(row=11,column=0,columnspan=3)
+        self.masterElem['ProgressBar'].grid(row=12,column=0,columnspan=6)
         #self.ListItems.focus_set()
     
     
@@ -183,6 +196,10 @@ class playlistGenWindow:
                                    command = self.PullFromURL,
                                    fg=playlistGenWindow.defFgColor,
                                    highlightbackground=playlistGenWindow.defBgColor)
+        playlistGenWindow.PackWindow(self.urlPromptElem)
+        # Hide URL Prompt window until needed
+        self.urlPromptWindow.withdraw()
+        
         tk.mainloop()
         
 

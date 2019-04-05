@@ -226,7 +226,7 @@ def PlaylistFrom1001Tracklist(playlistURL):
     CreatePlaylistFromTracks(setlist,playlistName)
         
 def CreatePlaylistFromArtists(artistList,playlistName):
-
+    # TODO: Convert to generator so that we can update progress bar
     # spotipy auth/init
     scope = 'user-library-read playlist-modify-private playlist-read-private'
     spotify = spotipyExt.initializeSpotifyToken(scope)
@@ -252,7 +252,7 @@ def CreatePlaylistFromArtists(artistList,playlistName):
                     artistsDict[possibleArtist] = foundArtist
                 else:
                     artistsDict[possibleArtist] = None
-        #TODO: Add progress bar of matches and misses
+
 
     matchedArtists = [v for k,v in artistsDict.items() if v is not None]  
     unmatchedArtists = [k for k,v in artistsDict.items() if v is None]
