@@ -197,35 +197,28 @@ def GetTracksFromXML(playlistURL):
     songs = tree.xpath('//div[@class="tlToogleData"][@itemprop="tracks"]/meta[@itemprop="name"]/@content')
     return songs, setlist_title
     
-def CreatePlaylistFromTracks(setlist,playlistName):
+def CreateTracklistFromTracks(setlist,playlistName):
     sp_scope = 'user-library-read playlist-modify-private playlist-read-private'
     sp = spotipyExt.initializeSpotifyToken(sp_scope)
 
-    setlistIDs, tracksNotFound = [], []
+    playlistTracks, tracksNotFound = [], []
     artists_tracks = [tuple((name) for name in song.split(' - ')) for song in setlist]
     for artistName, trackName in artists_tracks:
-        trackID = sp.getTrackID(trackName, artistName)
+        # TODO Return track objects
+        track = sp.getTrack(trackName, artistName)
         # TODO: Add way to resolve missing tracks
-        if trackID:
-            setlistIDs.append(trackID)
+        if track:
+            playlistTracks.append(track)
         else:
             tracksNotFound.append((artistName,trackName))
-
-    playlist = sp.user_playlist_create(spotipyExt.DEFAULT_USERNAME,playlistName,public=False)
-    sp.user_playlist_add_tracks(spotipyExt.DEFAULT_USERNAME,playlist['id'],setlistIDs)
     if tracksNotFound:
         print("The following tracks could not be found", tracksNotFound)
     else:
         print("All tracks added successfully")
-            
-def PlaylistFrom1001Tracklist(playlistURL):
 
-    setlist, playlistName = GetTracksFromXML(playlistURL)
-    # TODO: Possible duplicate sp objects?
-    
-    CreatePlaylistFromTracks(setlist,playlistName)
-        
-def CreatePlaylistFromArtists(artistList,playlistName):
+    return playlistTracks
+                
+def CreateTracklistFromArtists(artistList):
     # TODO: Convert to generator so that we can update progress bar
     # spotipy auth/init
     scope = 'user-library-read playlist-modify-private playlist-read-private'
@@ -262,9 +255,23 @@ def CreatePlaylistFromArtists(artistList,playlistName):
 
     playlistTracks = spotify.getTracksByArtists(matchedArtists,numSongs=trackCountBasedOnPopularity)
     
+    return playlistTracks
+    
+def CreatePlaylist(playlistName, playlistTracks):
     # Create playlist and add songs
-    playlist = spotify.user_playlist_create(USERNAME, playlistName, public=True)
+    sp_scope = 'user-library-read playlist-modify-private playlist-read-private'
+    sp = spotipyExt.initializeSpotifyToken(sp_scope)
+    playlist = sp.user_playlist_create(USERNAME, playlistName, public=True)
     playlistTracksID = [track['id'] for track in playlistTracks]
-    spotify.user_playlist_add_tracks(USERNAME, playlist['id'], playlistTracksID)
+    sp.user_playlist_add_tracks(USERNAME, playlist['id'], playlistTracksID)
     print('+++ Playlist Generated: ',playlistName)
     print('++++ %d tracks added'%len(playlistTracksID))
+    
+      
+def PlaylistFromPoster(artistList,playlistName):
+    tracklist = CreateTracklistFromArtists(artistList)
+    CreatePlaylist(playlistName,tracklist)
+    
+def PlaylistFrom1001Tracklist(playlistURL):
+    tracklist, playlistName = GetTracksFromXML(playlistURL)
+    CreatePlaylist(playlistName,tracklist)

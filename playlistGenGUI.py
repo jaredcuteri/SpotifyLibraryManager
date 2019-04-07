@@ -72,7 +72,7 @@ class playlistGenWindow:
         elif mode == "1001Tracklist Generator":
             self.PullFrom1001Tracklists()
         else:
-            print('Source Mode Not Implemented')
+            raise Exception('Source Mode Not Implemented')
         
     def cbSubmit(self):
         rawText = self.masterElemEntry['ListItems'].get(1.0,tk.END)
@@ -81,10 +81,10 @@ class playlistGenWindow:
         self.finalSetlist = list(filter(None, setlist))
         mode = self.sourceMode.get()
         if mode == "Poster Generator":
-            setlistExtractor.CreatePlaylistFromArtists(self.finalSetlist ,
+            setlistExtractor.PlaylistFromPoster(self.finalSetlist ,
                                         self.masterElemEntry['PlaylistName'].get())
         elif mode == "1001Tracklist Generator":
-            setlistExtractor.CreatePlaylistFromTracks(self.finalSetlist ,
+            setlistExtractor.PlaylistFrom1001Tracklist(self.finalSetlist ,
                                         self.masterElemEntry['PlaylistName'].get())
         else:
             raise Exception('Source Mode Not Implemented')
@@ -97,7 +97,7 @@ class playlistGenWindow:
 
         self.finalSetlist = None
         self.sourceLocation = None
-        self.masterElem, self.masterElemEntry = {},{}
+        self.masterElem, self.masterElemEntry, self.masterElemAnim = {},{},{}
         self.rawImage = None
         
         self.master = tk.Tk()
@@ -163,7 +163,7 @@ class playlistGenWindow:
         s = ttk.Style()
         s.theme_use('clam')
         s.configure("red.Horizontal.TProgressbar", foreground='green', background='grey')
-        self.masterElem['ProgressBar'] = ttk.Progressbar(self.master,
+        self.masterElemAnim['ProgressBar'] = ttk.Progressbar(self.master,
                                                       style="green.Horizontal.TProgressbar",
                                                       orient=tk.HORIZONTAL,
                                                       length=800,
@@ -179,7 +179,7 @@ class playlistGenWindow:
         self.masterElemEntry['ListItems'].grid(row=2,rowspan=8,column=0,columnspan=3)
         self.masterElem['TargetImage'].grid(row=1,rowspan=10,column=3,columnspan=3)
         self.masterElem['SubmitButton'].grid(row=11,column=0,columnspan=3)
-        self.masterElem['ProgressBar'].grid(row=12,column=0,columnspan=6)
+        self.masterElemAnim['ProgressBar'].grid(row=12,column=0,columnspan=6)
         #self.ListItems.focus_set()
     
     

@@ -413,6 +413,18 @@ class SpotifyExt(spotipy.Spotify):
         else:
             return None
 
+    def getTrack(self, trackName, artistName=None):
+        tracks = self.search(trackName,type='track')
+        if tracks['tracks']['items']:
+            if len(tracks['tracks']['items'])>1:
+                # Use artistname to resolve    
+                tracks = self.search(artistName + ' ' + trackName,limit=1,type='track')
+                if not tracks['tracks']['items']:
+                    tracks = self.search(trackName,limit=1,type='track')   
+            return tracks['tracks']['items'][0]
+        else:
+            return None
+
 # Get Spotify Authorization and return user spotify token
 def initializeSpotifyToken(scope,username=DEFAULT_USERNAME):
     ''' Initialize the Spotify Authorization token with specified scope
