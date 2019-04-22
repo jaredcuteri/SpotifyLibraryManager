@@ -249,7 +249,8 @@ class SpotifyExt(spotipy.Spotify):
             flagAllTracksMoved = False
             
         return flagAllTracksMoved
-
+    
+    # TODO: Remove
     def getTrackIDsFromPlaylistName(self, playlistName, username=DEFAULT_USERNAME):
         ''' Get all tracks from playlist by name
         
@@ -272,7 +273,32 @@ class SpotifyExt(spotipy.Spotify):
             for track in tracks_batch['items']:
                 trackList.append(track['track'])
         return trackList
-
+        
+    def getTracksFromPlaylistName(self, playlistName, username=DEFAULT_USERNAME):
+        ''' Get all tracks from playlist by name
+        
+            Paramters:
+                - playlistName - name of playlist
+        
+            Returns:
+                - trackList - list of tracks
+        '''
+        playlists = self.user_playlists(username, limit=50, offset=0)
+        for playlist in playlists['items']:
+            if playlist['name'] == playlistName:
+                targetPlaylist = playlist
+        numTracks = targetPlaylist['tracks']['total']
+        batchSize = 100
+        trackList = dict.fromkeys(['href', 'items', 'limit', 'next',\
+                                'offset', 'previous', 'total'])
+        trackList['items'] = []
+        for idxOffset in range(0,numTracks,batchSize):
+            tracks_batch = self.user_playlist_tracks(username,targetPlaylist['id'],\
+                                        fields=None,limit=batchSize,offset=idxOffset)
+            for track in tracks_batch['items']:
+                trackList['items'].append(track)
+        return trackList
+        
     def savePlaylistToLibrary(self, playlistName):
         ''' Save all tracks from playlist to library
         
