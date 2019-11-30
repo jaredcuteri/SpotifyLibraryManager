@@ -84,8 +84,7 @@ class playlistGenWindow:
             setlistExtractor.PlaylistFromPoster(self.finalSetlist ,
                                         self.masterElemEntry['PlaylistName'].get())
         elif mode == "1001Tracklist Generator":
-            setlistExtractor.PlaylistFrom1001Tracklist(self.finalSetlist ,
-                                        self.masterElemEntry['PlaylistName'].get())
+            setlistExtractor.PlaylistFrom1001Tracklist(self.finalSetlist)
         else:
             raise Exception('Source Mode Not Implemented')
         # TODO: Create a progress bar instead of destroying
