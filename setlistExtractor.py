@@ -221,7 +221,7 @@ def CreateTracklistFromTracks(setlist,playlistName):
 def CreateTracklistFromArtists(artistList):
     # TODO: Convert to generator so that we can update progress bar
     # spotipy auth/init
-    scope = 'user-library-read playlist-modify-private playlist-read-private'
+    scope = 'user-library-read playlist-modify-private playlist-modify-public playlist-read-private'
     spotify = spotipyExt.initializeSpotifyToken(scope)
 
     # Find artists
