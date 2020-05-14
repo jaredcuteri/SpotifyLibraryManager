@@ -51,8 +51,8 @@ def PlaylistFrom1001Tracklist(playlistURL):
     #Need to fix setlist title
     setlist_title = setlist_title[0]
 
-    playlist = sp.user_playlist_create(spotipyExt.DEFAULT_USERNAME,setlist_title,public=False)
-    sp.user_playlist_add_tracks(spotipyExt.DEFAULT_USERNAME,playlist['id'],setlistIDs)
+    playlist = sp.user_playlist_create(sp.username,setlist_title,public=False)
+    sp.user_playlist_add_tracks(sp.username,playlist['id'],setlistIDs)
     if tracksNotFound:
         print("The following tracks could not be found", tracksNotFound)
     else:
