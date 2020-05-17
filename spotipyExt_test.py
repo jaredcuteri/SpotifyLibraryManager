@@ -5,8 +5,9 @@ import json
 CLIENT_SECRETS_FILE = "./client_secret.json" #This is the name of your JSON file
 
 with open(CLIENT_SECRETS_FILE,'r') as fid:
-    credz = json.loads(fid)
+    credz = json.load(fid)
     UID = credz['userconfig']['uid']
+
 class TestSpotipyExt(unittest.TestCase):
     
     test_tag = '__test__'
@@ -47,9 +48,9 @@ class TestSpotipyExt(unittest.TestCase):
         # Create 2 Test playlists
         plNameOriginal = self.test_tag+"saveTracksToPlaylistOriginal"
         plName         = self.test_tag+"saveTracksToPlaylistExt"
-        playlistOriginal = self.spotify.user_playlist_create(self.self.spotifyExt.username,\
+        playlistOriginal = self.spotify.user_playlist_create(self.spotifyExt.username,\
                                         plNameOriginal, public=False)
-        playlist         = self.spotifyExt.user_playlist_create(self.self.spotifyExt.username,\
+        playlist         = self.spotifyExt.user_playlist_create(self.spotifyExt.username,\
                                         plName , public=False)
                                         
         #TODO: Change to pull a default track list                        
@@ -58,12 +59,12 @@ class TestSpotipyExt(unittest.TestCase):
         trackListID = [track['track']['id'] for track in trackList['items']]
         
         # Save Tracks to Playlist
-        saveAllTracksToPlaylist(self.spotify,playlistOriginal['id'],trackListID)
-        self.spotifyExt.user_playlist_add_tracks(self.self.spotifyExt.username,playlist['id'],trackListID)
+        saveAllTracksToPlaylist(self,playlistOriginal['id'],trackListID)
+        self.spotifyExt.user_playlist_add_tracks(self.spotifyExt.username,playlist['id'],trackListID)
         
         # pull playlist data
-        playlistOriginal = self.spotify.user_playlist(self.self.spotifyExt.username,playlistOriginal['id'])
-        playlist = self.spotifyExt.user_playlist(self.self.spotifyExt.username,playlist['id'])
+        playlistOriginal = self.spotify.user_playlist(self.spotifyExt.username,playlistOriginal['id'])
+        playlist = self.spotifyExt.user_playlist(self.spotifyExt.username,playlist['id'])
         
         tracksOriginal = [ track['track']  for track in playlistOriginal['tracks']['items']]
         tracks = [ track['track']  for track in playlist['tracks']['items']]
@@ -73,12 +74,12 @@ class TestSpotipyExt(unittest.TestCase):
         
     def tearDown(self):
         # Find all playlists starting __test__
-        playlists = self.spotify.user_playlists(self.self.spotifyExt.username)
+        playlists = self.spotify.user_playlists(self.spotifyExt.username)
         testPlaylistsID = [playlist['id'] for playlist in playlists['items'] if self.test_tag in playlist['name']]
         
         # delete all playlists found with __test__ tag
         for testPlaylist in testPlaylistsID:
-            self.spotify.user_playlist_unfollow(self.self.spotifyExt.username,testPlaylist)
+            self.spotify.user_playlist_unfollow(self.spotifyExt.username,testPlaylist)
         
         
 def getAllSavedTracks(sp):
@@ -98,7 +99,7 @@ def getAllSavedTracks(sp):
                 trackList['items'].append(item)
         return trackList
 
-def saveAllTracksToPlaylist(sp, playlistID, trackListID):
+def saveAllTracksToPlaylist(self, playlistID, trackListID):
         numTracksAdded = 0
         batchSize = 100
         # TODO: Set order of add by date added
@@ -106,7 +107,7 @@ def saveAllTracksToPlaylist(sp, playlistID, trackListID):
                               range(0,len(trackListID)+1,batchSize)]
                               
         for trackID in batchedTrackListID:
-            result = sp.user_playlist_add_tracks(self.self.spotifyExt.username,playlistID,trackID)
+            result = self.spotify.user_playlist_add_tracks(self.spotifyExt.username,playlistID,trackID)
             numTracksAdded += len(trackID)
         return numTracksAdded
 

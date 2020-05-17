@@ -40,7 +40,7 @@ def makeStringName(track):
     return track['name'] + ' - ' + ' - '.join([artist['name'] for artist in track['artists']])
 
 with open(CLIENT_SECRETS_FILE,'r') as fid:
-    credz = json.loads(fid)
+    credz = json.load(fid)
 
 #Spotipy Auth
 sp_scope = 'user-library-read playlist-read-private' 
