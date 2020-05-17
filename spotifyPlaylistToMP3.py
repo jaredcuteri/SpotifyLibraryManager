@@ -7,6 +7,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from oauth2client import client
 from oauth2client import tools
 from oauth2client.file import Storage
+import json
 
 # TODO: Add playlist name capability
 if len(sys.argv) > 1:
@@ -23,7 +24,7 @@ SCOPES = ['https://www.googleapis.com/auth/youtube.force-ssl']
 API_SERVICE_NAME = 'youtube'
 API_VERSION = 'v3'
 
-CLIENT_SECRETS_FILE = "client_secret.json" #This is the name of your JSON file
+CLIENT_SECRETS_FILE = "./client_secret.json" #This is the name of your JSON file
 
 def get_authenticated_service():
     credential_path = os.path.join('./','credential_sample.json')
@@ -38,11 +39,12 @@ def get_authenticated_service():
 def makeStringName(track):
     return track['name'] + ' - ' + ' - '.join([artist['name'] for artist in track['artists']])
 
-
+with open(CLIENT_SECRETS_FILE,'r') as fid:
+    credz = json.load(fid)
 
 #Spotipy Auth
 sp_scope = 'user-library-read playlist-read-private' 
-sp = spotipyExt.initializeSpotifyToken(sp_scope)
+sp = spotipyExt.initializeSpotifyToken(sp_scope,credz['userconfig']['uid'])
 tracks = sp.current_user_saved_tracks(limit=numberOfTracks)#limit=17,offset=0)  #102)
 #tracks = sp.getTracksFromPlaylistName("The Future Was Yesterday")
 #playlistName = "test_1"

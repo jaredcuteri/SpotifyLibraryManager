@@ -2,8 +2,6 @@ import sys
 import spotipy
 import spotipy.util as util
 
-DEFAULT_USERNAME = "1232863129"
-
 class SpotifyExt(spotipy.Spotify):
     '''
     SpotifyExt is an extension of the spotipy.Spotify class that allows "limitless" 
@@ -13,6 +11,7 @@ class SpotifyExt(spotipy.Spotify):
     '''
     __doc__ += spotipy.Spotify.__doc__     
     def __init__(self, *args, **kwargs):
+        self.username = None
         super().__init__(*args,**kwargs)
         
     # TODO: Create decorator (for saved tracks and user playlists because wrapping is identical)
@@ -197,7 +196,7 @@ class SpotifyExt(spotipy.Spotify):
             print(track['track']['name'] + ' - ' 
                 + track['track']['artists'][0]['name'])
  
-    def erasePlaylistsByNames(self, playlistsToDelete, user=DEFAULT_USERNAME):
+    def erasePlaylistsByNames(self, playlistsToDelete):
         ''' Erase playlists that contain string or substring in there name
         
             Parameters:
@@ -211,11 +210,11 @@ class SpotifyExt(spotipy.Spotify):
             playlistsToDelete = [playlistsToDelete]
         numPlaylistsDeleted = 0
         # TODO: Alleviate 50 playlist limit
-        playlists = self.user_playlists(user, limit=50, offset=0)
+        playlists = self.user_playlists(self.username, limit=50, offset=0)
         for playlistToDelete in playlistsToDelete:
             for playlist in playlists['items']:
                 if playlistToDelete in playlist['name']:
-                    self.user_playlist_unfollow(user, playlist['id'])
+                    self.user_playlist_unfollow(self.username, playlist['id'])
                     numPlaylistsDeleted += 1
                 else:
                     pass
@@ -251,7 +250,7 @@ class SpotifyExt(spotipy.Spotify):
         return flagAllTracksMoved
     
     # TODO: Remove
-    def getTrackIDsFromPlaylistName(self, playlistName, username=DEFAULT_USERNAME):
+    def getTrackIDsFromPlaylistName(self, playlistName):
         ''' Get all tracks from playlist by name
         
             Paramters:
@@ -260,7 +259,7 @@ class SpotifyExt(spotipy.Spotify):
             Returns:
                 - trackList - list of tracks
         '''
-        playlists = self.user_playlists(username, limit=50, offset=0)
+        playlists = self.user_playlists(self.username, limit=50, offset=0)
         for playlist in playlists['items']:
             if playlist['name'] == playlistName:
                 targetPlaylist = playlist
@@ -268,13 +267,13 @@ class SpotifyExt(spotipy.Spotify):
         batchSize = 100
         trackList = []
         for idxOffset in range(0,numTracks,batchSize):
-            tracks_batch = self.user_playlist_tracks(username,targetPlaylist['id'],\
+            tracks_batch = self.user_playlist_tracks(self.username,targetPlaylist['id'],\
                                         fields=None,limit=batchSize,offset=idxOffset)
             for track in tracks_batch['items']:
                 trackList.append(track['track'])
         return trackList
         
-    def getTracksFromPlaylistName(self, playlistName, username=DEFAULT_USERNAME):
+    def getTracksFromPlaylistName(self, playlistName):
         ''' Get all tracks from playlist by name
         
             Paramters:
@@ -283,7 +282,7 @@ class SpotifyExt(spotipy.Spotify):
             Returns:
                 - trackList - list of tracks
         '''
-        playlists = self.user_playlists(username, limit=50, offset=0)
+        playlists = self.user_playlists(self.username, limit=50, offset=0)
         for playlist in playlists['items']:
             if playlist['name'] == playlistName:
                 targetPlaylist = playlist
@@ -293,7 +292,7 @@ class SpotifyExt(spotipy.Spotify):
                                 'offset', 'previous', 'total'])
         trackList['items'] = []
         for idxOffset in range(0,numTracks,batchSize):
-            tracks_batch = self.user_playlist_tracks(username,targetPlaylist['id'],\
+            tracks_batch = self.user_playlist_tracks(self.username,targetPlaylist['id'],\
                                         fields=None,limit=batchSize,offset=idxOffset)
             for track in tracks_batch['items']:
                 trackList['items'].append(track)
@@ -305,7 +304,7 @@ class SpotifyExt(spotipy.Spotify):
             Parameters:
                 - playlistName - playlist name to pull tracks 
         '''
-        trackIDsFromPlaylist = GetTrackIDsFromPlaylistName(self,playlistName,username=DEFAULT_USERNAME)
+        trackIDsFromPlaylist = GetTrackIDsFromPlaylistName(self,playlistName)
         for track in trackIDsFromPlaylist:
             self.current_user_saved_tracks_add([track])
 
@@ -316,7 +315,7 @@ class SpotifyExt(spotipy.Spotify):
                 - playlistName - playlist name which contains tracks to remove
                                  from library
         '''
-        trackIDsFromPlaylist = GetTrackIDsFromPlaylistName(self,playlistName,username=DEFAULT_USERNAME)
+        trackIDsFromPlaylist = GetTrackIDsFromPlaylistName(self,playlistName)
         for track in trackIDsFromPlaylist:
             self.current_user_saved_tracks_delete([track])
     
@@ -452,7 +451,7 @@ class SpotifyExt(spotipy.Spotify):
             return None
 
 # Get Spotify Authorization and return user spotify token
-def initializeSpotifyToken(scope,username=DEFAULT_USERNAME):
+def initializeSpotifyToken(scope,username):
     ''' Initialize the Spotify Authorization token with specified scope
     
         Parameters:
@@ -462,9 +461,11 @@ def initializeSpotifyToken(scope,username=DEFAULT_USERNAME):
         Returns:
             - sp - authorized spotipy object
     '''
+
     token = util.prompt_for_user_token(username, scope)
     if token:
         sp = SpotifyExt(auth=token)
+        sp.username = username
     else:
         raise Exception('Could not authenticate Spotify User: ', username)
 
