@@ -112,8 +112,9 @@ class SpotifyExt(spotipy.Spotify):
                 if idxPlaylist < numPlaylistsToProcess+offset:
                     playlists['items'].append(item)            
         return playlists
-           
-    def tracksAddedBefore(self, trackList, date):
+    
+    @staticmethod       
+    def tracksAddedBefore(trackList, date):
         ''' Return list of tracks added before date (YYYYMMDD)
 
             Parameters:
@@ -142,8 +143,9 @@ class SpotifyExt(spotipy.Spotify):
             if date_added_int < date:
                 trackListBeforeDate.append(track)
         return trackListBeforeDate
-
-    def tracksAddedAfter(self, trackList, date):
+    
+    @staticmethod
+    def tracksAddedAfter(trackList, date):
         ''' Return list of tracks added after date (YYYYMMDD)
 
             Parameters:
@@ -172,7 +174,8 @@ class SpotifyExt(spotipy.Spotify):
                 trackListAfterDate.append(track)
         return trackListAfterDate
 
-    def tracksAddedBetween(self, tracklist, afterDate, beforeDate):
+    @staticmethod
+    def tracksAddedBetween(trackList, afterDate, beforeDate):
         ''' Return list of tracks added between dates
 
             Parameters:
@@ -182,17 +185,19 @@ class SpotifyExt(spotipy.Spotify):
             Returns:
                 - trackListBetween - list of tracks added between dates
         '''
-        trackListAfter = tracksAddedAfter(trackList,afterDate)
-        trackListBetween = tracksAddedBefore(trackListAfter,beforeDate)
+        # TODO: Fix this function so tracklist isn't ambiguous with tracks['items'] field
+        trackListAfter = SpotifyExt.tracksAddedAfter(trackList,afterDate)
+        trackListBetween = SpotifyExt.tracksAddedBefore(trackListAfter,beforeDate)
         return trackListBetween
 
-    def printTracks(self, trackList):
+    @staticmethod
+    def printTracks(trackList):
         ''' Prints tracks in human readable format
             
             Parameters:
                 - trackList - list of track objects
         '''
-        for track in trackLists:
+        for track in trackList:
             print(track['track']['name'] + ' - ' 
                 + track['track']['artists'][0]['name'])
  
