@@ -14,12 +14,7 @@ if len(sys.argv) > 1:
     numberOfTracks = int(sys.argv[1])
 else:
     numberOfTracks = None
-# The CLIENT_SECRETS_FILE variable specifies the name of a file that contains
-# the OAuth 2.0 information for this application, including its client_id and
-# client_secret.
 
-# This OAuth 2.0 access scope allows for full read/write access to the
-# authenticated user's account and requires requests to use an SSL connection.
 SCOPES = ['https://www.googleapis.com/auth/youtube.force-ssl']
 API_SERVICE_NAME = 'youtube'
 API_VERSION = 'v3'
@@ -45,10 +40,7 @@ with open(CLIENT_SECRETS_FILE,'r') as fid:
 #Spotipy Auth
 sp_scope = 'user-library-read playlist-read-private' 
 sp = spotipyExt.initializeSpotifyToken(sp_scope,credz['userconfig']['uid'])
-tracks = sp.current_user_saved_tracks(limit=numberOfTracks)#limit=17,offset=0)  #102)
-#tracks = sp.getTracksFromPlaylistName("The Future Was Yesterday")
-#playlistName = "test_1"
-#tracks = sp.getTracksFromPlaylistName(playlistName)
+tracks = sp.current_user_saved_tracks(limit=numberOfTracks)
 
 # Google Auth
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
