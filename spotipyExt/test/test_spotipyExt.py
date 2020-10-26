@@ -1,12 +1,13 @@
 import unittest
-from spotipyExt import * 
+import spotipy
+import spotipy.util as util
+from spotipyExt import spotipyExt
+from spotipyExt.auth import SpotifyAuth
 import json 
 
-CLIENT_SECRETS_FILE = "./client_secret.json" #This is the name of your JSON file
+CLIENT_SECRETS_FILE = "../client_secret.json" #This is the name of your JSON file
 
-with open(CLIENT_SECRETS_FILE,'r') as fid:
-    credz = json.load(fid)
-    UID = credz['userconfig']['uid']
+UID = SpotifyAuth.get_uid()
 
 class TestSpotipyExt(unittest.TestCase):
     
@@ -22,7 +23,7 @@ class TestSpotipyExt(unittest.TestCase):
         else:
             raise Exception('Could not authenticate Spotify User: ', UID)
         
-        self.spotifyExt = initializeSpotifyToken(scope, UID)
+        self.spotifyExt = spotipyExt.initializeSpotifyToken(scope, UID)
         self.spotifyExt.username = UID
         
     def test_Return20savedTracks(self):

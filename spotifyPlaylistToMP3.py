@@ -1,51 +1,27 @@
 import os
 import sys
 import youtube_dl
-import spotipyExt
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from oauth2client import client
-from oauth2client import tools
-from oauth2client.file import Storage
+from spotipyExt.auth import SpotifyAuth, YoutubeAuth
 import json
 
 # TODO: Add playlist name capability
 if len(sys.argv) > 1:
     numberOfTracks = int(sys.argv[1])
 else:
-    numberOfTracks = None
-
-SCOPES = ['https://www.googleapis.com/auth/youtube.force-ssl']
-API_SERVICE_NAME = 'youtube'
-API_VERSION = 'v3'
-
-CLIENT_SECRETS_FILE = "./client_secret.json" #This is the name of your JSON file
-
-def get_authenticated_service():
-    credential_path = os.path.join('./','credential_sample.json')
-    store = Storage(credential_path)
-    credentials = store.get()
-    if not credentials or credentials.invalid:
-        flow = client.flow_from_clientsecrets(CLIENT_SECRETS_FILE, SCOPES)
-        credentials = tools.run_flow(flow, store)
-    return build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
-    
+    numberOfTracks = 0
+   
 
 def makeStringName(track):
     return track['name'] + ' - ' + ' - '.join([artist['name'] for artist in track['artists']])
 
-with open(CLIENT_SECRETS_FILE,'r') as fid:
-    credz = json.load(fid)
-
 #Spotipy Auth
 sp_scope = 'user-library-read playlist-read-private' 
-sp = spotipyExt.initializeSpotifyToken(sp_scope,credz['userconfig']['uid'])
-tracks = sp.current_user_saved_tracks(limit=numberOfTracks)
+sp = SpotifyAuth.get_authenticated_service(scope=sp_scope)
 
 # Google Auth
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-service = get_authenticated_service()
+yt = YoutubeAuth.get_authenticated_service()
 
+tracks = sp.current_user_saved_tracks(limit=numberOfTracks)
 
 trackURLs = []
 outputDir = '/Users/jaredcuteri/Music/Downloads/recent/'
@@ -62,9 +38,10 @@ ydl_opts = {
 trackables = enumerate(tracks['items'])
     
 for count, track  in trackables:
-    query_result = service.search().list(
+    trackname = makeStringName(track['track'])
+    query_result = yt.search().list(
             part = 'snippet',
-            q = makeStringName(track['track']),
+            q = trackname, 
             order = 'relevance', # You can consider using viewCount
             maxResults = 1,
             type = 'video', # Channels might appear in search results
@@ -77,6 +54,6 @@ for count, track  in trackables:
         try:
             ydl.download([trackURL])
             if os.path.isfile(outputDir+'_.mp3'):
-                os.rename(outputDir+'_.mp3',outputDir+makeStringName(track['track'])+'.mp3')
+                os.rename(outputDir+'_.mp3',outputDir+trackname+'.mp3')
         except:
-            print("Video unable to be downloaded for "+makeStringName(track['track']))
+            print("Video unable to be downloaded for "+trackname)
