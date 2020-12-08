@@ -1,5 +1,6 @@
 # Ignore All dot files
 .*
+*.json
 # Ignore cache
 __pycache__
 # Don't ignore this dot file

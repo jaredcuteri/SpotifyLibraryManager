@@ -6,7 +6,6 @@ from tkinter.scrolledtext import ScrolledText
 import re
 
 import math
-import setlistExtractor
 import spotipyExt
 from lxml import html
 import requests

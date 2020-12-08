@@ -467,7 +467,7 @@ def initializeSpotifyToken(scope,username):
             - sp - authorized spotipy object
     '''
 
-    token = util.prompt_for_user_token(username, scope)
+    token = spotipy.util.prompt_for_user_token(username, scope)
     if token:
         sp = SpotifyExt(auth=token)
         sp.username = username
