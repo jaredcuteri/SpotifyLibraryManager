@@ -22,6 +22,7 @@ sp = SpotifyAuth.get_authenticated_service(scope=sp_scope)
 yt = YoutubeAuth.get_authenticated_service()
 
 tracks = sp.current_user_saved_tracks(limit=numberOfTracks)
+#tracks = sp.getTracksFromPlaylistName("")
 
 trackURLs = []
 outputDir = '/Users/jaredcuteri/Music/Downloads/recent/'
