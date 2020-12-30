@@ -278,7 +278,7 @@ class SpotifyExt(spotipy.Spotify):
                 trackList.append(track['track'])
         return trackList
         
-    def getTracksFromPlaylistName(self, playlistName):
+    def getTracksFromPlaylistName(self, playlistName, limit=float('inf')):
         ''' Get all tracks from playlist by name
         
             Paramters:
@@ -291,7 +291,7 @@ class SpotifyExt(spotipy.Spotify):
         for playlist in playlists['items']:
             if playlist['name'] == playlistName:
                 targetPlaylist = playlist
-        numTracks = targetPlaylist['tracks']['total']
+        numTracks = min(targetPlaylist['tracks']['total'], limit)
         batchSize = 100
         trackList = dict.fromkeys(['href', 'items', 'limit', 'next',\
                                 'offset', 'previous', 'total'])

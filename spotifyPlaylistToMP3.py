@@ -1,17 +1,19 @@
+import argparse
+import json
+from spotipyExt.auth import SpotifyAuth, YoutubeAuth
 import os
 import sys
 import youtube_dl
-from spotipyExt.auth import SpotifyAuth, YoutubeAuth
-import json
 
 def makeStringName(track):
     return track['name'] + ' - ' + ' - '.join([artist['name'] for artist in track['artists']])
 
-# TODO: Add playlist name capability
-if len(sys.argv) > 1:
-    numberOfTracks = int(sys.argv[1])
-else:
-    numberOfTracks = 0
+parser = argparse.ArgumentParser()
+parser.add_argument('--playlist', '-p', action='store',
+                    default=None,help='Playlist from user library to pull tracks from.')
+parser.add_argument('--trackNumber','-n', action='store',type=int,
+                    default=float('inf'), help='Number of tracks to pull.')
+args = parser.parse_args()
 
 #Spotipy Auth
 sp_scope = 'user-library-read playlist-read-private' 
@@ -20,8 +22,10 @@ sp = SpotifyAuth.get_authenticated_service(scope=sp_scope)
 # Google Auth
 yt = YoutubeAuth.get_authenticated_service()
 
-tracks = sp.current_user_saved_tracks(limit=numberOfTracks)
-#tracks = sp.getTracksFromPlaylistName("")
+if args.playlist:
+    tracks = sp.getTracksFromPlaylistName(args.playlist,limit=args.trackNumber)
+else:
+    tracks = sp.current_user_saved_tracks(limit=args.trackNumber)
 
 trackURLs = []
 outputDir = '/Users/jaredcuteri/Music/Downloads/recent/'
