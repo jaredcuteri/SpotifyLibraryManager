@@ -9,7 +9,7 @@ SCOPES = ['https://www.googleapis.com/auth/youtube.force-ssl']
 API_SERVICE_NAME = 'youtube'
 API_VERSION = 'v3'
 
-CLIENT_SECRETS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),'client_secret.json')
+CLIENT_SECRETS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),'client_secret_google.json')
 
 def get_authenticated_service(client_secret_file=CLIENT_SECRETS_FILE):
     credential_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),'credential_sample.json')
@@ -19,4 +19,3 @@ def get_authenticated_service(client_secret_file=CLIENT_SECRETS_FILE):
         flow = client.flow_from_clientsecrets(client_secret_file, SCOPES)
         credentials = tools.run_flow(flow, store)
     return build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
- 

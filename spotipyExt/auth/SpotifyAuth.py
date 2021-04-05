@@ -2,7 +2,7 @@ import json
 import os
 from .. import spotipyExt
 
-CLIENT_SECRETS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),'client_secret.json')
+CLIENT_SECRETS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),'client_secret_spotify.json')
 DEFAULT_SCOPE = 'user-library-read playlist-read-private'
 
 def get_uid(client_secret_file = CLIENT_SECRETS_FILE):
