@@ -16,7 +16,7 @@ parser.add_argument('--trackNumber','-n', action='store',type=int,
 args = parser.parse_args()
 
 #Spotipy Auth
-sp_scope = 'user-library-read playlist-read-private' 
+sp_scope = 'user-library-read playlist-read-private'
 sp = SpotifyAuth.get_authenticated_service(scope=sp_scope)
 
 # Google Auth
@@ -28,7 +28,8 @@ else:
     tracks = sp.current_user_saved_tracks(limit=args.trackNumber)
 
 trackURLs = []
-outputDir = '/Users/jaredcuteri/Music/Downloads/recent/'
+newFolderName = args.playlist + '/'
+outputDir = '/Users/claytoncuteri/Music/Downloads/' + newFolderName
 ydl_opts = {
     'format': 'bestaudio/best',
     'outtmpl': outputDir+'%(title)s.%(ext)s',
@@ -40,12 +41,12 @@ ydl_opts = {
 }
 
 trackables = enumerate(tracks['items'])
-    
+
 for count, track  in trackables:
     trackname = makeStringName(track['track'])
     query_result = yt.search().list(
             part = 'snippet',
-            q = trackname, 
+            q = trackname,
             order = 'relevance', # You can consider using viewCount
             maxResults = 1,
             type = 'video', # Channels might appear in search results
