@@ -28,8 +28,7 @@ else:
     tracks = sp.current_user_saved_tracks(limit=args.trackNumber)
 
 trackURLs = []
-newFolderName = args.playlist + '/'
-outputDir = '/Users/claytoncuteri/Music/Downloads/' + newFolderName
+outputDir = '/Users/claytoncuteri/Music/Downloads/' + args.playlist + '/'
 ydl_opts = {
     'format': 'bestaudio/best',
     'outtmpl': outputDir+'%(title)s.%(ext)s',
