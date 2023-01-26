@@ -2,3 +2,5 @@ youtube_dl
 lxml
 spotipy
 pytesseract
+google-api-python-client
+oauth2client

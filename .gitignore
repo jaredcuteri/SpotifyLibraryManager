@@ -1,6 +1,7 @@
 # Ignore All dot files
 .*
 *.json
+dist/
 build/
 *.egg-info
 client_secret.json

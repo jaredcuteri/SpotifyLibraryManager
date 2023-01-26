@@ -470,9 +470,9 @@ def initialize_spotify_token(*args, **kwargs):
     token = spotipy.util.prompt_for_user_token(*args, **kwargs)
     if token:
         sp = SpotifyExt(auth=token)
-        sp.username = kwargs['uid']
+        sp.username = kwargs['username']
     else:
-        raise Exception('Could not authenticate Spotify User: ', kwargs['uid'])
+        raise Exception('Could not authenticate Spotify User: ', kwargs['username'])
 
     return sp
 

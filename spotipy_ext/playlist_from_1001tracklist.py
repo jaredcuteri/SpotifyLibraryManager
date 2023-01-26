@@ -14,7 +14,7 @@ This script will generate a spotify playlist from a 1001tracklists.com tracklist
 #    </span>
 #</span>
 
-import spotipyExt
+import spotipy_ext
 from lxml import html
 import requests
 
@@ -36,7 +36,7 @@ def PlaylistFrom1001Tracklist(playlistURL):
     songs = tree.xpath('//div[@class="tlToogleData"][@itemprop="tracks"]/meta[@itemprop="name"]/@content')
 
     sp_scope = 'user-library-read playlist-modify-private playlist-read-private'
-    sp = spotipyExt.initialize_spotify_token(sp_scope)
+    sp = spotipy_ext.initialize_spotify_token(sp_scope)
 
     setlistIDs, tracksNotFound = [], []
     artists_tracks = [tuple((name) for name in song.split(' - ')) for song in songs]
