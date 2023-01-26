@@ -1,6 +1,9 @@
 # Ignore All dot files
 .*
 *.json
+build/
+*.egg-info
+client_secret.json
 # Ignore cache
 __pycache__
 # Don't ignore this dot file

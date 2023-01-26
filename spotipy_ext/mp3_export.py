@@ -1,8 +1,6 @@
 import argparse
-import json
-from spotipy_ext.auth import SpotifyAuth, YoutubeAuth
+from spotipy_ext.auth import spotify_auth, youtube_auth
 import os
-import sys
 import youtube_dl
 
 def makeStringName(track):
@@ -17,10 +15,10 @@ args = parser.parse_args()
 
 #Spotipy Auth
 sp_scope = 'user-library-read playlist-read-private'
-sp = SpotifyAuth.get_authenticated_service(scope=sp_scope)
+sp = spotify_auth.get_authenticated_service(scope=sp_scope)
 
 # Google Auth
-yt = YoutubeAuth.get_authenticated_service()
+yt = youtube_auth.get_authenticated_service()
 
 if args.playlist:
     tracks = sp.getTracksFromPlaylistName(args.playlist,limit=args.trackNumber)

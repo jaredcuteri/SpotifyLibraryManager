@@ -25,7 +25,7 @@ def PlaylistFrom1001Tracklist(playlistURL):
 
     # Header is needed to make Website believe this request is coming from a browser
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.76 Safari/537.36'} # This is chrome, you can set whatever browser you like
-    
+
     response = requests.get(playlistURL, headers=headers)
     if response.status_code >= 300:
         raise RequestError("Failed to access webpage. Response Code: {0}".format(response.status_code))
@@ -34,9 +34,9 @@ def PlaylistFrom1001Tracklist(playlistURL):
     setlist_title = tree.xpath('//body/meta[@itemprop="name"]/@content')
 
     songs = tree.xpath('//div[@class="tlToogleData"][@itemprop="tracks"]/meta[@itemprop="name"]/@content')
-            
+
     sp_scope = 'user-library-read playlist-modify-private playlist-read-private'
-    sp = spotipyExt.initializeSpotifyToken(sp_scope)
+    sp = spotipyExt.initialize_spotify_token(sp_scope)
 
     setlistIDs, tracksNotFound = [], []
     artists_tracks = [tuple((name) for name in song.split(' - ')) for song in songs]
@@ -57,6 +57,6 @@ def PlaylistFrom1001Tracklist(playlistURL):
         print("The following tracks could not be found", tracksNotFound)
     else:
         print("All tracks added successfully")
-    
+
 if __name__ == '__main__':
     PlaylistFrom1001Tracklist(PL_URL)

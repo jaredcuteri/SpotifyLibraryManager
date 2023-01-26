@@ -22,14 +22,14 @@ setlist = setlistExtractor.generateSetlistFromImage(IMAGE)
 
 # spotipy auth/init
 scope = 'user-library-read playlist-modify-private playlist-read-private'
-spotify = spotipyExt.initializeSpotifyToken(scope)
+spotify = spotipyExt.initialize_spotify_token(scope)
 
 # Find artists
 artistsDict = dict.fromkeys(setlist)
 for possibleArtist in setlist:
     result = spotify.search(possibleArtist, limit=None, type='artist', market=None)
     possibleArtistMatches = result['artists']['items']
-    
+
     foundArtist = spotify.fullArtistMatch(possibleArtistMatches, possibleArtist)
     if foundArtist:
         artistsDict[possibleArtist] = foundArtist
@@ -47,14 +47,14 @@ for possibleArtist in setlist:
                 artistsDict[possibleArtist] = None
     #TODO: Add progress bar of matches and misses
 
-matchedArtists = [v for k,v in artistsDict.items() if v is not None]  
+matchedArtists = [v for k,v in artistsDict.items() if v is not None]
 unmatchedArtists = [k for k,v in artistsDict.items() if v is None]
 
 print('+ Found %d/%d of possible artists.'%(len(matchedArtists),len(setlist)))
 print('-- The following possible artists could not be found: ',unmatchedArtists)
 
 playlistTracks = spotify.getTracksByArtists(matchedArtists,numSongs=trackCountBasedOnPopularity)
-    
+
 # Create playlist and add songs
 playlist = spotify.user_playlist_create(USERNAME, PLAYLIST_NAME, public=True)
 playlistTracksID = [track['id'] for track in playlistTracks]
