@@ -28,10 +28,11 @@ def download_spotify_tracks(track_count, playlist=None):
     else:
         tracks = sp.current_user_saved_tracks(limit=track_count)
 
-    outputDir = '/Users/jaredcuteri/Music/Downloads/recent/'
+    outputDir = f'/Users/jaredcuteri/Music/Downloads/{playlist.lower().replace(" ","_") if playlist else "recent"}/'
     ydl_opts = {
         'format': 'bestaudio/best',
         'outtmpl': outputDir+'%(title)s.%(ext)s',
+        'nocheckcertificate': True,
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
@@ -54,12 +55,13 @@ def download_spotify_tracks(track_count, playlist=None):
                 ).execute()
         print("Searchs "+str(count))
         trackURL = "http://www.youtube.com/watch?v=" + query_result['items'][0]['id']['videoId']
+        # TODO: refactor to check to see if track was previously downloaded
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             try:
                 ydl.download([trackURL])
                 if os.path.isfile(outputDir+'_.mp3'):
-                    os.rename(outputDir+'_.mp3',outputDir+trackname+'.mp3')
-            except:
+                    os.rename(outputDir+'_.mp3', outputDir+trackname+'.mp3')
+            except Exception:
                 print("Video unable to be downloaded for "+trackname)
 
 if __name__=='__main__':

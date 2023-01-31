@@ -13,9 +13,8 @@ CLIENT_SECRETS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '
 
 def get_authenticated_service(client_secret_file=CLIENT_SECRETS_FILE):
     credential_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'credential_sample.json')
-    store = Storage(client_secret_file)
-    # credentials = store.get()
-    credentials = None
+    store = Storage('/tmp/youtube_credential_store.json')
+    credentials = store.get()
     if not credentials or credentials.invalid:
         flow = client.flow_from_clientsecrets(client_secret_file, SCOPES)
         credentials = tools.run_flow(flow, store)
