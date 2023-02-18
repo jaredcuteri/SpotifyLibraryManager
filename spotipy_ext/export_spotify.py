@@ -1,18 +1,19 @@
 import argparse
 from spotipy_ext.auth import spotify_auth, youtube_auth
 import os
+from pathlib import Path
 import youtube_dl
 
 def makeStringName(track):
     return track['name'] + ' - ' + ' - '.join([artist['name'] for artist in track['artists']])
 
-def main():
+def main(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('--playlist', '-p', action='store',
                         default=None, help='Playlist from user library to pull tracks from.')
     parser.add_argument('--ntracks','-n', action='store', type=int,
                         default=float('inf'), help='Number of tracks to pull.')
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     download_spotify_tracks(args.ntracks, playlist=args.playlist)
 
@@ -42,8 +43,15 @@ def download_spotify_tracks(track_count, playlist=None):
 
     trackables = enumerate(tracks['items'])
 
-    for count, track  in trackables:
+    for _, track  in trackables:
         trackname = makeStringName(track['track'])
+        output_path =  Path(outputDir) / f'{trackname}.mp3'
+
+        # skip if already downloaded
+        if output_path.isfile():
+            print(f'File already downloaded: {output_path}')
+            continue
+
         query_result = yt.search().list(
                 part = 'snippet',
                 q = trackname,
@@ -53,14 +61,15 @@ def download_spotify_tracks(track_count, playlist=None):
                 relevanceLanguage = 'en',
                 safeSearch = 'moderate',
                 ).execute()
-        print("Searchs "+str(count))
+
         trackURL = "http://www.youtube.com/watch?v=" + query_result['items'][0]['id']['videoId']
-        # TODO: refactor to check to see if track was previously downloaded
+
         with youtube_dl.YoutubeDL(ydl_opts) as ydl:
             try:
                 ydl.download([trackURL])
                 if os.path.isfile(outputDir+'_.mp3'):
-                    os.rename(outputDir+'_.mp3', outputDir+trackname+'.mp3')
+                    os.rename(outputDir+'_.mp3', str(output_path))
+                    print(f'File downloaded: {output_path}')
             except Exception:
                 print("Video unable to be downloaded for "+trackname)
 
