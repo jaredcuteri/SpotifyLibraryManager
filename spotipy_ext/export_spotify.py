@@ -2,7 +2,7 @@ import argparse
 from spotipy_ext.auth import spotify_auth, youtube_auth
 import os
 from pathlib import Path
-import youtube_dl
+import yt_dlp as youtube_dl
 
 def makeStringName(track):
     return track['name'] + ' - ' + ' - '.join([artist['name'] for artist in track['artists']])
@@ -48,7 +48,7 @@ def download_spotify_tracks(track_count, playlist=None):
         output_path =  Path(outputDir) / f'{trackname}.mp3'
 
         # skip if already downloaded
-        if output_path.isfile():
+        if output_path.is_file():
             print(f'File already downloaded: {output_path}')
             continue
 
